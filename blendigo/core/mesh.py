@@ -1,26 +1,56 @@
 from blendigo.pyIndigo import Mesh
 
 def export_indigo_mesh(mesh):
-        #print("Exporting mesh %s" % obj.data.name)
-
-        #mesh = obj.to_mesh(self.scene, True, 'RENDER')
-        #mesh = obj.to_mesh()
-
-        mesh.calc_loop_triangles()
-
-        if len(mesh.loop_triangles) < 1:
-            return False
+        #print("Exporting mesh {}...".format(mesh.name), end =" ")
+        print("Exporting mesh {}...".format(mesh.name))
 
         indigo_mesh = Mesh(mesh.name)
+
+        mesh.calc_loop_triangles()
+        #if len(mesh.loop_triangles) < 1:
+        #    return False
+
+        num_uv_layers = len(mesh.uv_layers)
+        if num_uv_layers < 1:
+            uv_ptr = 0
+            num_uv = 0
+        else:
+            uv_ptr = mesh.uv_layers[0].data[0].as_pointer()
+            num_uv = len(mesh.uv_layers[0].data)
+
+        indigo_mesh.fromBlenderMesh( 
+            len(mesh.vertices), mesh.vertices[0].as_pointer(),
+            len(mesh.loop_triangles), mesh.loop_triangles[0].as_pointer(),
+            num_uv, uv_ptr,
+            mesh.loops[0].as_pointer(),
+            mesh.polygons[0].as_pointer())
+
+        for mat in mesh.materials:
+            if mat is not None:
+                indigo_mesh.AddMaterialUsed(mat.name)
         
+        indigo_mesh.Finalize()
+
+        return indigo_mesh
+        
+        
+        #print("Vertices...", end =" ")
+        print("    Vertices...")
 
         # Add vertex data - way faster with pointer to data!
         indigo_mesh.AddVerticesViaPointer(len(mesh.vertices), mesh.vertices[0].as_pointer(), 5)
+        print("        done.")
+        #print("done.", end =" ")
 
         # Old mesh vertex export operation
         #indigo_mesh.AddVertices(len(mesh.vertices), [x for v in mesh.vertices for x in v.co])
 
-        if False:
+        print("    Faces...")
+        #print("Faces...", end =" ")
+
+        print(mesh.loop_triangles[0].__class__)
+
+        if True:
             if (len(mesh.uv_layers) > 0):
                 indigo_mesh.AddFacesWithUvs(len(mesh.loop_triangles), mesh.loop_triangles[0].as_pointer(), mesh.uv_layers[0].data[0].as_pointer(), 4, 12)
             else:
@@ -96,9 +126,10 @@ def export_indigo_mesh(mesh):
                         faces.extend([0,0,0])
                         faces.append(f.material_index)
             indigo_mesh.AddFaces(len(mesh.loop_triangles), faces)
+            indigo_mesh.normal_smoothing = num_smooth > 0
 
-        
-        indigo_mesh.normal_smoothing = num_smooth > 0
+        print("        done.")
+
         
         for mat in mesh.materials:
             if mat is not None:

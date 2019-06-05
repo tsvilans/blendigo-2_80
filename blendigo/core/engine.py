@@ -32,7 +32,7 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
         if name == "":
             name = obj.name
 
-        if name not in self.exported_objects.keys() or True:
+        if name not in self.exported_objects.keys():
             print("Exporting object {}...".format(name))
             
             if obj.data.name not in self.exported_meshes.keys():
