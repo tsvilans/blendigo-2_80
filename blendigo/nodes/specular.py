@@ -1,7 +1,7 @@
 import bpy
 from bpy.types import NodeTree, Node, NodeSocket, ShaderNodeTree, BoolProperty
 
-from ..pyIndigo.Materials import SpecularMaterial
+from ..pyIndigo.Materials import SpecularMaterial, Medium, SceneNodeMedium
 from ..pyIndigo.Param import * 
 
 from .base import IndigoShaderNode
@@ -30,8 +30,15 @@ class IndigoSpecularShaderNode(Node, IndigoShaderNode):
         print("Converting {} (IndigoSpecularShaderNode)".format(name))
 
 
-        indigo_material = SpecularMaterial(name)
+        medium = Medium.Basic("DefaultMedium", 1.5, 10)
+        medium_node = SceneNodeMedium("DefaultMedium", medium)
 
+        indigo_material = SpecularMaterial(name, medium_node)
+
+        indigo_material.arch_glass = self.arch_glass
+        indigo_material.transparent = self.transparent
+
+        '''
         inp = self.inputs['Medium']
         
         inp = self.inputs['Absorption']
@@ -43,7 +50,7 @@ class IndigoSpecularShaderNode(Node, IndigoShaderNode):
             tex = inp.links[0].from_node
             if tex.image:
                 indigo_material.bump = WavelengthIndependentParam.Texture(bpy.path.abspath(tex.image.filepath), 2.2, 0, 1.0, 0)
-
+        '''
 
         return indigo_material
 

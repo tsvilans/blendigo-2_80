@@ -7,6 +7,10 @@ from .diffuse import IndigoDiffuseShaderNode
 from .phong import IndigoPhongShaderNode
 from .specular import IndigoSpecularShaderNode
 from .texture import IndigoTextureNode
+from .emission import IndigoEmissionShaderNode
+from .param_rgb import IndigoParamRGBShaderNode
+from .param_uniform import IndigoParamUniformShaderNode
+from .param_blackbody import IndigoParamBlackbodyShaderNode
 #from .blend import IndigoBlendNode
 
 import nodeitems_utils
@@ -27,5 +31,9 @@ node_categories = [
         NodeItem("IndigoPhongShaderNode"),
         NodeItem("IndigoSpecularShaderNode"),
         NodeItem("IndigoTextureNode"),
+        NodeItem("IndigoEmissionShaderNode"),
+        NodeItem("IndigoParamRGBShaderNode"),
+        NodeItem("IndigoParamUniformShaderNode"),
+        NodeItem("IndigoParamBlackbodyShaderNode"),
         ]),
     ]

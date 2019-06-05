@@ -45,7 +45,19 @@ class IndigoShaderNode:
         inp = self.inputs['Emission']
         if len(inp.links) > 0:
             node = inp.links[0].from_node
-        # Finish implementing Emission
+            if hasattr(node, 'indigo_type') and node.indigo_type == 'INDIGO_EMISSION':
+
+                print ("FOUND EMISSION")
+
+                emission, base_emission = node.convert()
+
+                if emission:
+                    print("SETTING EMISSION")
+                    indigo_material.emission = emission
+                if base_emission:
+                    indigo_material.base_emission = base_emission
+                else:
+                    indigo_material.base_emission = WavelengthDependentParam.Uniform(1.0)
 
         '''
         if len(inp.links) < 1:

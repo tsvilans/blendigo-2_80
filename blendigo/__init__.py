@@ -17,7 +17,8 @@ bl_info = {
 
 import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem
-from .nodes import IndigoPhongShaderNode, IndigoDiffuseShaderNode, IndigoSpecularShaderNode, IndigoShaderTree, IndigoTextureNode
+from .nodes import IndigoPhongShaderNode, IndigoDiffuseShaderNode, IndigoSpecularShaderNode, IndigoShaderTree, IndigoTextureNode, IndigoEmissionShaderNode
+from .nodes import IndigoParamRGBShaderNode, IndigoParamUniformShaderNode, IndigoParamBlackbodyShaderNode, IndigoTextureNode
 from .nodes import IndigoNodeCategory, node_categories
 
 from .core import IndigoRenderEngine
@@ -40,7 +41,11 @@ classes = [
     IndigoPhongShaderNode, 
     IndigoDiffuseShaderNode,
     IndigoSpecularShaderNode,
-    IndigoTextureNode,     
+    IndigoEmissionShaderNode,
+    IndigoParamRGBShaderNode, 
+    IndigoParamUniformShaderNode, 
+    IndigoParamBlackbodyShaderNode, 
+    IndigoTextureNode,
     IndigoShaderTree,
 
     IndigoLightSunProperties,
