@@ -86,11 +86,12 @@ class INDIGO_PT_render_settings(bpy.types.Panel):
         col = layout.column()
         col.separator()
         
-        #col.label("System Settings:")
-        #box = col.box()
-        #sub = box.column()
-        #sr = sub.row()
-        #sr.prop(indigo_engine, 'threads_auto')
+        col.label(text="System Settings:")
+        box = col.box()
+        sub = box.column()
+        sr = sub.row()
+        sr.prop(indigo_engine, 'buffer_multiplier')
+        sr.prop(indigo_engine, 'write_to_xml')
         #rc = sr.column()
         #rc.prop(indigo_engine, 'threads')
         #rc.enabled = not indigo_engine.threads_auto

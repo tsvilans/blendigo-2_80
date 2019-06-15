@@ -198,7 +198,7 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
         tm.iso = self.scene.camera.data.indigo_camera.iso
         #tm.ev = self.scene.camera.data.indigo_tonemapping.camera_ev
 
-        scale = 10.0
+        scale = render_settings.buffer_multiplier
         tm.scale = 1 / scale
         
         print ("Exporting camera...")
@@ -238,18 +238,18 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
         max_pass = 20
         current_pass = 0
 
-
-        #raw_buffer = (c_float * self.resolution_y * self.resolution_x * 4).from_address(ctypes.addressof(float_buffer.get_data_pointer()))
         raw_buffer = float_buffer.get_data_pointer()
-        #raw_buffer = float_buffer.get_data_array(self.resolution_x, self.resolution_y)
-        #print ("raw buffer length: %i" % len(raw_buffer))
+
+        float_buffer.create_dummy()
+
+
         shape = int(self.resolution_y * self.resolution_x)
         shape_x = int(self.resolution_x)
         shape_y = int(self.resolution_y)
 
         pixels = [[0,0,0,0]] * shape
 
-        raw_pixels = np.ctypeslib.as_array(raw_buffer, (shape_x, shape_y, 4))
+        #raw_pixels = np.ctypeslib.as_array(raw_buffer, (shape_x, shape_y, 4))
 
         print("Entering rendering loop...")
 
@@ -261,59 +261,29 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
             haltspp = render_settings.haltspp
 
         while self.test_break() is False:
-            #print("Pass {}".format(current_pass))
 
             start = time.time()
             result = self.begin_result(0, 0, self.resolution_x, self.resolution_y)
-
-            #pi = 0
             self.renderer.Poll()
 
             tone_mapper.TonemapBlocking()
 
-            #end = time.time()
-            #print ("   tonemapping: {}".format(end-start))
-            #start = time.time()
+            #raw_pixels = np.ctypeslib.as_array(raw_buffer, (shape_x, shape_y, 4))
+            raw_pixels = np.ctypeslib.as_array(float_buffer.get_flipped(), (shape_x, shape_y, 4))
 
-            index = 0
-            pi = 0
-            '''
-            for i in reversed(range(self.resolution_y)):
-                for j in range(self.resolution_x):
-                    index = (i * self.resolution_x + j) * 4
-                    #print (pi)
-                    pixels[pi] = [raw_buffer[index] * scale, raw_buffer[index + 1] * scale, raw_buffer[index + 2] * scale, raw_buffer[index + 3]]
-                    pi += 1
-            
-            '''
-            raw_pixels = np.ctypeslib.as_array(raw_buffer, (shape_x, shape_y, 4))
-            #raw_pixels = np.flipud(raw_pixels)
-            #raw_pixels = np.fliplr(raw_pixels)
-            #pixels = np.copy(raw_pixels)
-            #raw_pixels = np.ctypeslib.as_array(raw_buffer, (shape, 4))
             pixels = np.multiply(raw_pixels, np.array([scale, scale, scale, 1]))
             pixels.shape = (shape, 4)
-
-            #end = time.time()
-            #print ("     wrangling: {}".format(end-start))
-
-            #start = time.time()
 
             result.layers[0].passes["Combined"].rect = pixels
             
             self.end_result(result)
-            #self.update_result(result)
-
             self.update_stats("SPP: %.2f" % self.renderer.samples_per_pixel, "Num. passes: %i" % current_pass)
 
-            #print ("      updating: {}".format(end-start))
 
             if self.renderer.samples_per_pixel > haltspp:
                 break
                 
             current_pass += 1
-
-            #end = time.time()
 
             while time.time()-start < interval and self.test_break() is False:
                 time.sleep(0.03)
@@ -322,8 +292,6 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
 
             #time.sleep(max(interval, end-start))
             interval *= 1.25
-
-
 
         print("Stopping...")    
 

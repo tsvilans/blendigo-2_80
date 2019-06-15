@@ -53,4 +53,12 @@ class IndigoRendererProperties(bpy.types.PropertyGroup):
         name="Write .IGS",
         description="Write to Indigo Scene file.",
         default=False,
-        )    
+        )
+
+    buffer_multiplier: FloatProperty(
+        name="Buffer mult.",
+        description="Amount to augment exposure by to get max pixel values greater than 1.0 (hack).",
+        default=10.0,
+        min=1.0,
+        max=1000.0,
+        )
