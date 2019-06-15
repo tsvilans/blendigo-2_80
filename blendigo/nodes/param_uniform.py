@@ -48,7 +48,7 @@ class IndigoParamUniformShaderNode(Node, IndigoShaderNode):
                 node = inp.links[0].from_node
                 return WavelengthIndependentParam.Texture(node._texture_path(), node.gamma, node.a, node.b * multiplier, node.c)
 
-        return WavelengthIndependentParam.RGB(inp.default_value * multiplier)
+        return WavelengthIndependentParam.Uniform(inp.default_value * multiplier)
 
 
     def copy(self, node):

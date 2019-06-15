@@ -65,7 +65,7 @@ classes = [
 ]
 
 import bl_ui
-
+'''
 ui_elements = [
     bl_ui.properties_data_armature.DATA_PT_custom_props_arm,
     bl_ui.properties_data_bone.BONE_PT_custom_props,
@@ -168,7 +168,7 @@ ui_elements = [
     bl_ui.properties_particle.PARTICLE_PT_render_collection,
     bl_ui.properties_particle.PARTICLE_PT_render_collection_use_count,
     bl_ui.properties_particle.PARTICLE_PT_render_extra,
-    bl_ui.properties_particle.PARTICLE_PT_render_line,
+    #bl_ui.properties_particle.PARTICLE_PT_render_line,
     bl_ui.properties_particle.PARTICLE_PT_render_object,
     bl_ui.properties_particle.PARTICLE_PT_render_path,
     bl_ui.properties_particle.PARTICLE_PT_render_path_timing,
@@ -292,7 +292,7 @@ ui_elements = [
     bl_ui.space_node.NODE_PT_texture_mapping,
     bl_ui.space_sequencer.SEQUENCER_PT_custom_props,
 ]
-
+'''
 def get_panels():
     exclude_panels = {
         'VIEWLAYER_PT_filter',
@@ -332,8 +332,8 @@ def register():
     nodeitems_utils.register_node_categories(IndigoRenderEngine.bl_idname, node_categories)
 
     # Add Indigo to all relevant UI elements
-    #for panel in get_panels():
-    for panel in ui_elements:
+    for panel in get_panels():
+    #for panel in ui_elements:
         panel.COMPAT_ENGINES.add(IndigoRenderEngine.bl_idname)
 
     #for ele in ui_elements:
