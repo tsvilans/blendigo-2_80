@@ -33,14 +33,16 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
             name = obj.name
 
         if name not in self.exported_objects.keys():
-            print("Exporting object {}...".format(name))
+            #print("Exporting object {}...".format(name))
             
             if obj.data.name not in self.exported_meshes.keys():
-                indigo_mesh = export_indigo_mesh(obj.data)
+                temp = obj.to_mesh()
+                indigo_mesh = export_indigo_mesh(temp)
                 if not indigo_mesh:
                     print("Error exporting mesh {}".format(obj.data.name))
                     return False
                 self.exported_meshes[obj.data.name] = indigo_mesh
+                obj.to_mesh_clear()
 
             else:
                 indigo_mesh = self.exported_meshes[obj.data.name]
@@ -62,24 +64,22 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
                 if mat.name in self.material_exporter.exported_materials.keys():
                     materials.append(self.material_exporter.exported_materials[mat.name])
 
-                '''
-                if mat.indigo_material.indigo_material_emission.emission_scale:
-                    em = mat.indigo_material.indigo_material_emission
-                    value = em.emission_scale_value * 10 ** em.emission_scale_exp
+                    if mat.name in self.material_exporter.emission_scales.keys():
+                        em = self.material_exporter.emission_scales[mat.name]
 
-                    if em.emission_scale_measure == 'luminous_flux':
-                        measure = Measure.LUMINOUS_FLUX
-                    elif em.emission_scale_measure == 'luminous_intensity':
-                        measure = Measure.LUMINOUS_INTENSITY
-                    elif em.emission_scale_measure == 'luminance':
-                        measure = Measure.LUMINANCE
-                    elif em.emission_scale_measure == 'luminous_emittance':
-                        measure = Measure.LUMINOUS_EMITTANCE
-                    else:
-                        measure = Measure.NONE
+                        if em[0] == 'luminous_flux':
+                            measure = Measure.LUMINOUS_FLUX
+                        elif em[0] == 'luminous_intensity':
+                            measure = Measure.LUMINOUS_INTENSITY
+                        elif em[0] == 'luminance':
+                            measure = Measure.LUMINANCE
+                        elif em[0] == 'luminous_emittance':
+                            measure = Measure.LUMINOUS_EMITTANCE
+                        else:
+                            measure = Measure.NONE
 
-                    emission_scales.append(EmissionScale(measure, value, self.material_exporter.exported_materials[mat.name]))
-                '''
+                        emission_scales.append(EmissionScale(measure, em[1], self.material_exporter.exported_materials[mat.name]))
+
             
             indigo_model.SetMaterials(materials)
             indigo_model.SetEmissionScales(emission_scales)
@@ -166,10 +166,10 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
         #    self.material_exporter.exported_mediums[medium.name] = indigo_medium
 
         for material in bpy.data.materials:
-            if material.name not in self.material_exporter.exported_materials:
+            if material.name not in self.material_exporter.exported_materials.keys():
                 pass
-                self.material_exporter.export(material);
-                scn.AddMaterial(self.material_exporter.exported_materials[material.name])
+            self.material_exporter.export(material);
+            scn.AddMaterial(self.material_exporter.exported_materials[material.name])
            
         for instance in depsgraph.object_instances:
             if self.test_break():

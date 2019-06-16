@@ -17,9 +17,10 @@ bl_info = {
 
 import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem
-from .nodes import IndigoPhongShaderNode, IndigoDiffuseShaderNode, IndigoSpecularShaderNode, IndigoShaderTree, IndigoTextureNode, IndigoEmissionShaderNode
-from .nodes import IndigoParamRGBShaderNode, IndigoParamUniformShaderNode, IndigoParamBlackbodyShaderNode, IndigoTextureNode
-from .nodes import IndigoNodeCategory, node_categories
+from .nodes import *
+#from .nodes import IndigoPhongShaderNode, IndigoDiffuseShaderNode, IndigoSpecularShaderNode, IndigoShaderTree, IndigoTextureNode, IndigoEmissionShaderNode, IndigoEmissionScaleProperties
+#from .nodes import IndigoParamRGBShaderNode, IndigoParamUniformShaderNode, IndigoParamBlackbodyShaderNode, IndigoTextureNode
+#from .nodes import IndigoNodeCategory, node_categories
 
 from .core import IndigoRenderEngine
 
@@ -38,8 +39,13 @@ classes = [
     IndigoRendererProperties,
     IndigoCameraProperties,
 
+    IndigoMaterialProperties, 
+    IndigoTextureProperties,
+    #IndigoEmissionScaleProperties,
+
     IndigoPhongShaderNode, 
     IndigoDiffuseShaderNode,
+    IndigoDoubleSidedThinShaderNode,
     IndigoSpecularShaderNode,
     IndigoEmissionShaderNode,
     IndigoParamRGBShaderNode, 
@@ -51,8 +57,6 @@ classes = [
     IndigoLightSunProperties,
     IndigoLightHemiProperties,
 
-    IndigoMaterialProperties, 
-    IndigoTextureProperties,
 
     INDIGO_PT_camera,
     INDIGO_PT_render_settings,
@@ -311,7 +315,7 @@ def register():
     # Register  classes
     from bpy.utils import register_class, unregister_class
     for cls in classes:
-        print("class: {} class_name: {}".format(cls, cls.__name__))
+        #print("class: {} class_name: {}".format(cls, cls.__name__))
 
         if hasattr(bpy.types, cls.__name__):
             print("   already registered")
@@ -336,16 +340,9 @@ def register():
     #for panel in ui_elements:
         panel.COMPAT_ENGINES.add(IndigoRenderEngine.bl_idname)
 
-    #for ele in ui_elements:
-    #   ele.COMPAT_ENGINES.add(IndigoRenderEngine.bl_idname)
-
-
-
 def unregister():
 
     # Remove Indigo from all relevant UI elements
-    #for ele in ui_elements:
-    #    ele.COMPAT_ENGINES.remove(IndigoRenderEngine.bl_idname)
     for panel in get_panels():
         if IndigoRenderEngine.bl_idname in panel.COMPAT_ENGINES:
             panel.COMPAT_ENGINES.remove(IndigoRenderEngine.bl_idname)        

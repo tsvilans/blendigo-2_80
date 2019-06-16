@@ -5,9 +5,10 @@ from .base import IndigoShaderNode, IndigoShaderTree
 
 from .diffuse import IndigoDiffuseShaderNode
 from .phong import IndigoPhongShaderNode
+from .double_sided_thin import IndigoDoubleSidedThinShaderNode
 from .specular import IndigoSpecularShaderNode
 from .texture import IndigoTextureNode
-from .emission import IndigoEmissionShaderNode
+from .emission import IndigoEmissionShaderNode, IndigoEmissionScaleProperties
 from .param_rgb import IndigoParamRGBShaderNode
 from .param_uniform import IndigoParamUniformShaderNode
 from .param_blackbody import IndigoParamBlackbodyShaderNode
@@ -25,15 +26,20 @@ class IndigoNodeCategory(NodeCategory):
 # all categories in a list
 node_categories = [
     # identifier, label, items list
-    IndigoNodeCategory("INDIGONODES", "Indigo Renderer", items=[
+    IndigoNodeCategory("INDIGO_SHADERS", "Indigo Shaders", items=[
         # our basic node
         NodeItem("IndigoDiffuseShaderNode"),
         NodeItem("IndigoPhongShaderNode"),
         NodeItem("IndigoSpecularShaderNode"),
+        NodeItem("IndigoDoubleSidedThinShaderNode"),
         NodeItem("IndigoTextureNode"),
         NodeItem("IndigoEmissionShaderNode"),
+        ]),
+
+    IndigoNodeCategory("INDIGO_PARAMS", "Indigo Params", items=[
+        # our basic node
         NodeItem("IndigoParamRGBShaderNode"),
         NodeItem("IndigoParamUniformShaderNode"),
         NodeItem("IndigoParamBlackbodyShaderNode"),
-        ]),
+        ]),    
     ]

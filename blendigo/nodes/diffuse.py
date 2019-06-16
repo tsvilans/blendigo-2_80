@@ -26,26 +26,16 @@ class IndigoDiffuseShaderNode(Node, IndigoShaderNode):
         self.outputs.new('NodeSocketShader', "Diffuse")
 
 
-    def convert(self, name):
+    def convert(self, name, exporter):
         print("Converting {} (IndigoDiffuseShaderNode)".format(name))
 
         indigo_material = DiffuseMaterial(name)
 
-        inp = self.inputs['Albedo']
+        albedo = self._process_input('Albedo', WavelengthDependentParam, WavelengthDependentParam.Uniform(0.7), False)
+        if albedo:
+            indigo_material.albedo = albedo
 
-        if len(inp.links) < 1:
-            indigo_material.albedo = WavelengthDependentParam.RGB(inp.default_value[0], inp.default_value[1], inp.default_value[2], 1.0)
-        else:
-            node = inp.links[0].from_node
-            if node.type == 'TEX_IMAGE':
-                if node.image:
-                    indigo_material.albedo = WavelengthDependentParam.Texture(bpy.path.abspath(node.image.filepath), 2.2, 0, 1.0, 0)
-            elif hasattr(node, 'indigo_type') and node.indigo_type == 'INDIGO_TEXTURE':
-                print("  GOT TEXTURE PATH ({}): {}".format(self.name, node._texture_path()))
-                node = inp.links[0].from_node
-                indigo_material.albedo = WavelengthDependentParam.Texture(node._texture_path(), node.gamma, node.a, node.b, node.c)
-
-        self._convert_common_inputs(indigo_material)
+        self._convert_common_inputs(indigo_material, name, exporter)
 
         return indigo_material
 

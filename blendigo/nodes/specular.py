@@ -26,7 +26,7 @@ class IndigoSpecularShaderNode(Node, IndigoShaderNode):
 
         self.outputs.new('NodeSocketShader', "Specular")
 
-    def convert(self, name):
+    def convert(self, name, exporter):
         print("Converting {} (IndigoSpecularShaderNode)".format(name))
 
 

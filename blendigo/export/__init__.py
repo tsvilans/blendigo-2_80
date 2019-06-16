@@ -8,6 +8,13 @@ class ShaderNodeExporter(object):
     def __init__(self):
         self.exported_materials = {}
         self.exported_mediums = {}
+        self.emission_scales = {}
+
+    def _default_material(self, name):
+        indigo_material = DiffuseMaterial(name)
+        indigo_material.albedo = WavelengthDependentParam.RGB(0.7, 0.7, 0.7, 1.0)
+
+        return SceneNodeMaterial(name, indigo_material)
 
     def export(self, material):
         if material.name in self.exported_materials.keys():
@@ -15,12 +22,17 @@ class ShaderNodeExporter(object):
             return
 
         tree = material.node_tree
+        if tree is None:
+            self.exported_materials[material.name] = self._default_material(material.name)
+            return
 
         # Find Indigo output
         outputs = [n for n in tree.nodes if n.type == 'OUTPUT_MATERIAL']
 
         if len(outputs) < 1:
-            return None
+            self.exported_materials[material.name] = self._default_material(material.name)
+            return
+
         indigo_output = outputs[0]
 
         for o in outputs:
@@ -36,20 +48,13 @@ class ShaderNodeExporter(object):
             if hasattr(l.from_node, 'indigo_type'):
 
                 name = "{}".format(material.name)
-                indigo_material = l.from_node.convert(name)
+                indigo_material = l.from_node.convert(name, self)
                 mat_node = SceneNodeMaterial(name, indigo_material)
 
                 self.exported_materials[name] = mat_node
-
-
-        #        dirty_nodes.append(l.from_node)
-
-        #while len(dirty_nodes) > 0:
-
-
-
-
-
+                return
+            else:
+                self.exported_materials[material.name] = self._default_material(material.name)
 
 class MaterialExporter(object):
 

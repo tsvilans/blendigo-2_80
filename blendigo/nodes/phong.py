@@ -16,7 +16,11 @@ class IndigoPhongShaderNode(Node, IndigoShaderNode):
     bl_icon = 'SOUND'
  
 
-    ior: bpy.props.FloatProperty(name="IOR", min=1.0, default=1.3)
+    ior: bpy.props.FloatProperty(
+        name="IOR", 
+        min=1.0, 
+        default=1.3,
+        )
 
     indigo_type = 'INDIGO_PHONG'
 
@@ -36,51 +40,23 @@ class IndigoPhongShaderNode(Node, IndigoShaderNode):
         self.outputs.new('NodeSocketShader', "Phong")
 
 
-    def convert(self, name):
+    def convert(self, name, exporter):
 
         print("Converting {} (IndigoPhongShaderNode)".format(name))
 
-        #indigo_material = PhongMaterial(name, self.inputs['IOR'].default_value)
         indigo_material = PhongMaterial(name, self.ior)
 
-        inp = self.inputs['Roughness']
+        albedo = self._process_input('Albedo', WavelengthDependentParam, WavelengthDependentParam.Uniform(0.7), False)
+        if albedo:
+            indigo_material.albedo = albedo
 
-        if len(inp.links) < 1:
-            indigo_material.roughness = WavelengthIndependentParam.Uniform(inp.default_value)
-        else:
-            node = inp.links[0].from_node
-            if node.type == 'TEX_IMAGE':
-                if node.image:
-                    indigo_material.roughness = WavelengthIndependentParam.Texture(bpy.path.abspath(node.image.filepath), 2.2, 0, 1.0, 0)
-            elif hasattr(node, 'indigo_type') and node.indigo_type == 'INDIGO_TEXTURE':
-                node = inp.links[0].from_node
-                indigo_material.roughness = WavelengthIndependentParam.Texture(node._texture_path(), node.gamma, node.a, node.b, node.c)
+        fresnel_scale = self._process_input('Fresnel Scale', WavelengthIndependentParam, WavelengthIndependentParam.Uniform(0.7), True)
+        if fresnel_scale:
+            indigo_material.fresnel_scale = fresnel_scale            
 
-        inp = self.inputs['Fresnel Scale']
-
-        if len(inp.links) < 1:
-            indigo_material.fresnel_scale = WavelengthIndependentParam.Uniform(inp.default_value)
-        else:
-            node = inp.links[0].from_node
-            if node.type == 'TEX_IMAGE':
-                if node.image:
-                    indigo_material.fresnel_scale = WavelengthIndependentParam.Texture(bpy.path.abspath(node.image.filepath), 2.2, 0, 1.0, 0)
-            elif hasattr(node, 'indigo_type') and node.indigo_type == 'INDIGO_TEXTURE':
-                indigo_material.fresnel_scale = WavelengthIndependentParam.Texture(node._texture_path(), node.gamma, node.a, node.b, node.c)            
-
-        inp = self.inputs['Albedo']
-
-        if len(inp.links) < 1:
-            indigo_material.albedo = WavelengthDependentParam.RGB(inp.default_value[0], inp.default_value[1], inp.default_value[2], 1.0)
-        else:
-            node = inp.links[0].from_node
-
-            if node.type == 'TEX_IMAGE':
-                if node.image:
-                    indigo_material.albedo = WavelengthDependentParam.Texture(bpy.path.abspath(node.image.filepath), 2.2, 0, 1.0, 0)
-            elif hasattr(node, 'indigo_type') and node.indigo_type == 'INDIGO_TEXTURE':
-                indigo_material.albedo = WavelengthDependentParam.Texture(node._texture_path(), node.gamma, node.a, node.b, node.c)
-              
+        roughness = self._process_input('Roughness', WavelengthIndependentParam, WavelengthIndependentParam.Uniform(0.7), True)
+        if roughness:
+            indigo_material.roughness = roughness   
 
         return indigo_material
 
