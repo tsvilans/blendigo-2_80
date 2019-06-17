@@ -50,11 +50,11 @@ class IndigoPhongShaderNode(Node, IndigoShaderNode):
         if albedo:
             indigo_material.albedo = albedo
 
-        fresnel_scale = self._process_input('Fresnel Scale', WavelengthIndependentParam, WavelengthIndependentParam.Uniform(0.7), True)
+        fresnel_scale = self._process_input('Fresnel Scale', WavelengthIndependentParam, WavelengthIndependentParam.Uniform(0.7), False)
         if fresnel_scale:
             indigo_material.fresnel_scale = fresnel_scale            
 
-        roughness = self._process_input('Roughness', WavelengthIndependentParam, WavelengthIndependentParam.Uniform(0.7), True)
+        roughness = self._process_input('Roughness', WavelengthIndependentParam, WavelengthIndependentParam.Uniform(0.7), False)
         if roughness:
             indigo_material.roughness = roughness   
 

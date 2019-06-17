@@ -22,7 +22,7 @@ class IndigoParamUniformShaderNode(Node, IndigoShaderNode):
 
     exp: bpy.props.IntProperty(
         name="^10",
-        default=7,
+        default=0,
         min=-30,
         max=30,
         )

@@ -27,6 +27,13 @@ class IndigoCameraProperties(bpy.types.PropertyGroup):
         default=True,
         )
 
+    focus_distance: FloatProperty(
+        name="Focus distance",
+        description="Camera focus distance",
+        default=1.0,
+        min=0.0,
+        )
+
     vignetting: BoolProperty(
         name="Vignetting",
         description="Vignetting",

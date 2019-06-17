@@ -23,6 +23,8 @@ class INDIGO_PT_camera(bpy.types.Panel):
         
         row = layout.row()
         row.prop(indigo_camera, 'autofocus')
+        if not indigo_camera.autofocus:
+            row.prop(indigo_camera, 'focus_distance')
         row.prop(indigo_camera, 'vignetting')
         
         row = layout.row()

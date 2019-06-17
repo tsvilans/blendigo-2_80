@@ -7,6 +7,7 @@ from ..pyIndigo.Param import *
 
 from .base import IndigoShaderNode
 
+'''
 class IndigoEmissionScaleProperties(bpy.types.PropertyGroup):
     enabled: bpy.props.BoolProperty(
         name="Enabled",
@@ -17,7 +18,7 @@ class IndigoEmissionScaleProperties(bpy.types.PropertyGroup):
     value: bpy.props.FloatProperty(
         name="Value",
         description="Value of emission in specified units.",
-        default=60,
+        default=1,
         )
 
     units: bpy.props.EnumProperty(
@@ -28,8 +29,8 @@ class IndigoEmissionScaleProperties(bpy.types.PropertyGroup):
         ('luminous_intensity', 'cd', 'Luminous intensity (lm/sr)'),
         ('luminance', 'nits', 'Luminance (lm/sr/m/m)'),
         ('luminous_emittance', 'lux', 'Luminous emittance (lm/m/m)')},
-        default='luminous_flux')
-
+        default='luminous_emittance')
+'''
 class IndigoEmissionShaderNode(Node, IndigoShaderNode):
 
     bl_idname = 'IndigoEmissionShaderNode'
@@ -61,11 +62,11 @@ class IndigoEmissionShaderNode(Node, IndigoShaderNode):
         name="Units",
         description="Units for emission scale.",
         items={
-        ('luminous_flux', 'lm', 'Luminous flux'),
+        ('luminous_flux', 'lm', 'Luminous flux (lm)'),
         ('luminous_intensity', 'cd', 'Luminous intensity (lm/sr)'),
         ('luminance', 'nits', 'Luminance (lm/sr/m/m)'),
         ('luminous_emittance', 'lux', 'Luminous emittance (lm/m/m)')},
-        default='luminous_flux')
+        default='luminous_emittance')
 
     indigo_type = 'INDIGO_EMISSION'
 

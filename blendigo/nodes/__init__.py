@@ -8,7 +8,7 @@ from .phong import IndigoPhongShaderNode
 from .double_sided_thin import IndigoDoubleSidedThinShaderNode
 from .specular import IndigoSpecularShaderNode
 from .texture import IndigoTextureNode
-from .emission import IndigoEmissionShaderNode, IndigoEmissionScaleProperties
+from .emission import IndigoEmissionShaderNode#, IndigoEmissionScaleProperties
 from .param_rgb import IndigoParamRGBShaderNode
 from .param_uniform import IndigoParamUniformShaderNode
 from .param_blackbody import IndigoParamBlackbodyShaderNode

@@ -29,7 +29,7 @@ class IndigoParamBlackbodyShaderNode(Node, IndigoShaderNode):
 
     exp: bpy.props.IntProperty(
         name="^10",
-        default=1,
+        default=0,
         min=-10,
         max=10,
         )

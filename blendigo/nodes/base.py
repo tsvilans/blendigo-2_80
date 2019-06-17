@@ -26,7 +26,7 @@ class IndigoShaderNode:
             node = inp.links[0].from_node
             if node.type == 'TEX_IMAGE':
                 if node.image:
-                    return param_type.Texture(bpy.path.abspath(node.image.filepath), 2.2, 0, 1.0, 0)
+                    return param_type.Texture(bpy.path.abspath(node.image.filepath), 1.0, 0, 1.0, 0)
             elif hasattr(node, 'indigo_type') and node.indigo_type == 'INDIGO_TEXTURE':
                 return param_type.Texture(node._texture_path(), node.gamma, node.a, node.b, node.c)
             elif hasattr(node, 'indigo_type') and node.indigo_type == 'INDIGO_PARAM':
@@ -34,6 +34,7 @@ class IndigoShaderNode:
                 return node.convert()
 
         if optional:
+            #print("returning none for {}".format(input_id))
             return None
 
         if hasattr(inp, "default_value"):
@@ -43,6 +44,7 @@ class IndigoShaderNode:
             if inp.type == 'RGBA':
                 return param_type.RGB(col[0], col[1], col[2], 1.0)
             #elif inp.type == 'VALUE':
+            #print("returning {} with value {}".format(input_id, col))
             return param_type.Uniform(col)
         return default
 

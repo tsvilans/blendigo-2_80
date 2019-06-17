@@ -22,13 +22,14 @@ class IndigoParamRGBShaderNode(Node, IndigoShaderNode):
 
     exp: bpy.props.IntProperty(
         name="10^",
-        default=7,
+        default=0,
         min=-30,
         max=30,
         )
 
     def init(self, context):
-        self.inputs.new('NodeSocketColor', "Color")
+        socket = self.inputs.new('NodeSocketColor', "Color")
+        socket.default_value = (1.0, 1.0, 1.0, 1.0)
 
         self.outputs.new('NodeSocketShader', "RGB")
 
