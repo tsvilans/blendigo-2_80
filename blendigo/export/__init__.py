@@ -10,6 +10,12 @@ class ShaderNodeExporter(object):
         self.exported_mediums = {}
         self.emission_scales = {}
 
+        default_material = DiffuseMaterial("Default")
+        default_material.albedo = WavelengthDependentParam.RGB(0.7, 0.7, 0.7, 1.0)
+
+        #self.default_material = SceneNodeMaterial("Default", default_material)
+        #self.indigo_scene = indigo_scene
+
     def _default_material(self, name):
         indigo_material = DiffuseMaterial(name)
         indigo_material.albedo = WavelengthDependentParam.RGB(0.7, 0.7, 0.7, 1.0)
