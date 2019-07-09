@@ -62,3 +62,25 @@ class IndigoRendererProperties(bpy.types.PropertyGroup):
         min=1.0,
         max=1000.0,
         )
+
+    splat_filter: EnumProperty(
+        items = [
+                ('box', 'Box', 'Box filter.'),
+                ('fast_box', 'Fast Box', 'Fast Box filter.'),
+                ('radial', 'Radial', 'Radial filter.')
+            ],
+        name="Splat filter",
+        description="Splat filter",
+        default="radial",
+        )
+
+    downsize_filter: EnumProperty(
+        items = [
+                ('gaussian', 'Gaussian', 'Gaussian filter.'),
+                ('cubic', 'Cubic', 'Cubic filter.'),
+                ('sharp', 'Sharp', 'Sharp filter.')
+            ],
+        name="Downsize filter",
+        description="Downsize filter",
+        default="sharp",
+        )    

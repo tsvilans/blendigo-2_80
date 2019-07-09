@@ -12,11 +12,7 @@ import time
 
 import blendigo.pyIndigo
 from blendigo.pyIndigo import *
-from blendigo.export import MaterialExporter,ShaderNodeExporter
-
-from .camera import export_camera
-from .background import export_background
-from .mesh import export_indigo_mesh
+from blendigo.export import *
 
 class IndigoRenderEngine(bpy.types.RenderEngine):
     bl_idname = 'IndigoAPI'
@@ -154,6 +150,8 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
         rs.halt_time = render_settings.halttime
         rs.supersampling = render_settings.supersampling
         rs.foreground_alpha = render_settings.foreground_alpha
+        rs.splat_filter = render_settings.splat_filter
+        rs.downsize_filter = render_settings.downsize_filter
 
         scn = Scene()
         scn.AddRenderSettings(rs)

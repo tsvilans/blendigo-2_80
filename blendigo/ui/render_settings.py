@@ -51,6 +51,8 @@ class INDIGO_PT_render_settings(bpy.types.Panel):
         box = col.box()
         sub = box.column()
         sub.prop(indigo_engine, 'supersampling')
+        sub.prop(indigo_engine, 'splat_filter')
+        sub.prop(indigo_engine, 'downsize_filter')
         '''
         sub.prop(indigo_engine, 'filter_preset')
         if indigo_engine.filter_preset == 'custom':
