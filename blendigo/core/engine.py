@@ -57,6 +57,9 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
                 if mat == None:
                     continue
 
+                if mat.name not in self.material_exporter.exported_materials.keys():
+                    self.material_exporter.export(mat)
+
                 if mat.name in self.material_exporter.exported_materials.keys():
                     materials.append(self.material_exporter.exported_materials[mat.name])
 
@@ -168,11 +171,11 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
            self.material_exporter.exported_mediums[medium.name] = indigo_medium
         '''
 
-        for material in bpy.data.materials:
-            if material.name not in self.material_exporter.exported_materials.keys():
-                pass
-            self.material_exporter.export(material);
-            scn.AddMaterial(self.material_exporter.exported_materials[material.name])
+        #for material in bpy.data.materials:
+        #    if material.name not in self.material_exporter.exported_materials.keys():
+        #        pass
+        #    self.material_exporter.export(material)
+        #    scn.AddMaterial(self.material_exporter.exported_materials[material.name])
            
         for instance in depsgraph.object_instances:
             if self.test_break():
@@ -191,6 +194,9 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
 
         for med in self.material_exporter.exported_mediums:
             scn.AddMedium(self.material_exporter.exported_mediums[med])
+
+        for mat in self.material_exporter.exported_materials:
+            scn.AddMaterial(self.material_exporter.exported_materials[mat])
 
         print ("Exporting tonemapping...")
         tonemapping_type = {'Linear':1000, 'Reinhard':1001, 'Camera':1002, 'Filmic':1003}
@@ -224,7 +230,9 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
 
             if render_settings.external:
                 import subprocess
-                subprocess.run(["C:\\Program Files\\Indigo Renderer\\indigo.exe", "C:/tmp/PyIndigoTest2.igs"])
+                tm.scale = 1.0
+
+                subprocess.run(["C:\\Program Files\\Indigo Renderer\\indigo.exe", igs_path])
                 return
 
         '''
@@ -289,7 +297,8 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
                 if self.indigo_renderer.samples_per_pixel > haltspp:
                    break
 
-            interval *= 1.25
+            if (interval < 90):
+                interval *= 1.25
 
         print("Stopping...")    
         

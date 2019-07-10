@@ -33,6 +33,8 @@ class IndigoSpecularShaderNode(Node, IndigoShaderNode):
         medium = Medium.Basic("DefaultMedium", 1.5, 10)
         medium_node = SceneNodeMedium("DefaultMedium", medium)
 
+        exporter.exported_mediums[name] = medium_node
+
         indigo_material = SpecularMaterial(name, medium_node)
 
         indigo_material.arch_glass = self.arch_glass

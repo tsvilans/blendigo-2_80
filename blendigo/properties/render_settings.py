@@ -48,10 +48,15 @@ class IndigoRendererProperties(bpy.types.PropertyGroup):
         default=False,
         )    
 
-
     write_to_xml: BoolProperty(
         name="Write .IGS",
         description="Write to Indigo Scene file.",
+        default=False,
+        )
+
+    external: BoolProperty(
+        name="Standalone",
+        description="Launch Indigo externally.",
         default=False,
         )
 
@@ -83,4 +88,17 @@ class IndigoRendererProperties(bpy.types.PropertyGroup):
         name="Downsize filter",
         description="Downsize filter",
         default="sharp",
+        )  
+
+    clamp_contributions: BoolProperty(
+        name="Clamp contributions",
+        description="Launch Indigo externally.",
+        default=False,
+        )
+
+    max_contributions: FloatProperty(
+        name="Max. contributions",
+        description="Maximum contribution",
+        default=100.0,
+        min=1.0,
         )    

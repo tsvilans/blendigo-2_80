@@ -94,6 +94,11 @@ class INDIGO_PT_render_settings(bpy.types.Panel):
         sr = sub.row()
         sr.prop(indigo_engine, 'buffer_multiplier')
         sr.prop(indigo_engine, 'write_to_xml')
+        sr.prop(indigo_engine, 'external')
+        
+        sr = sub.row()
+        sr.prop(indigo_engine, 'clamp_contributions')
+        sr.prop(indigo_engine, 'max_contributions')
         #rc = sr.column()
         #rc.prop(indigo_engine, 'threads')
         #rc.enabled = not indigo_engine.threads_auto

@@ -88,17 +88,23 @@ class IndigoDoubleSidedThinShaderNode(Node, IndigoShaderNode):
         if transmittance:
             indigo_material.transmittance = transmittance
 
-        front_material = self._get_submaterial('Front material', name+"_front", exporter)
+        front_name = name+"_front"
+        front_material = self._get_submaterial('Front material', front_name, exporter)
         if front_material:
-            mat_node = SceneNodeMaterial(name+"_front", front_material)
-            exporter.exported_materials[name+"_front"] = mat_node
+            mat_node = SceneNodeMaterial(front_name, front_material)
+            exporter.exported_materials[front_name] = mat_node
             indigo_material.front_material = mat_node
+        else:
+            print("          FRONT_MATERIAL FAILED")
 
-        back_material = self._get_submaterial('Back material', name+"_backt", exporter)
+        back_name = name+"_back"
+        back_material = self._get_submaterial('Back material', back_name, exporter)
         if back_material:
-            mat_node = SceneNodeMaterial(name+"_front", back_material)
-            exporter.exported_materials[name+"_back"] = mat_node
+            mat_node = SceneNodeMaterial(back_name, back_material)
+            exporter.exported_materials[back_name] = mat_node
             indigo_material.back_material = mat_node
+        else:
+            print("          BACK_MATERIAL FAILED")
 
         self._convert_common_inputs(indigo_material, name, exporter)
 
