@@ -13,13 +13,47 @@ import time
 import blendigo.pyIndigo
 from blendigo.pyIndigo import *
 from blendigo.export import *
+from blendigo.pyIndigo.ToneMapper import ChannelID
+
+
+class RenderChannel:
+
+    def __init__(self, name, num_components, channel_ids, channel_type, indigo_id):
+        self.name = name
+        self.num_components = num_components
+        self.channel_ids = channel_ids
+        self.channel_type = channel_type
+        self.indigo_id = indigo_id
+
+indigo_aovs = {
+    "foreground_channel": RenderChannel("Foreground", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_ALPHA),
+
+    "normals_channel": RenderChannel("Normals", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_NORMALS),
+    "normals_pre_bump_channel": RenderChannel("Normals pre bump", 3, 'XYZ', 'VECTOR', ChannelID.CHANNEL_NORMALS_PRE_BUMP),
+    "depth_channel": RenderChannel("Depth", 1, 'X', 'VALUE', ChannelID.CHANNEL_DEPTH),
+    "position_channel": RenderChannel("Position", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_POSITION),
+    "material_id_channel": RenderChannel("Material id", 1, 'X', 'VALUE', ChannelID.CHANNEL_NORMALS),
+    "object_id_channel": RenderChannel("Object id", 1, 'X', 'VALUE', ChannelID.CHANNEL_OBJECT_ID),
+
+    "direct_lighting_channel": RenderChannel("Direct lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_DIRECT_LIGHTING),
+    "indirect_lighting_channel": RenderChannel("Indirect lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_INDIRECT_LIGHTING),
+    "specular_reflection_lighting_channel": RenderChannel("Specular reflection lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_SPECULAR_REFLECTION_LIGHTING),
+    "refraction_lighting_channel": RenderChannel("Refraction lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_REFRACTION_LIGHTING),
+    "transmission_lighting_channel": RenderChannel("Transmission lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_TRANSMISSION_LIGHTING),
+    "emission_lighting_channel": RenderChannel("Emission lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_EMISSION_LIGHTING),
+    "participating_media_lighting_channel": RenderChannel("Participating media lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_PARTICIPATING_MEDIA_LIGHTING),
+
+    "sss_lighting_channel": RenderChannel("Sss lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_SSS_LIGHTING),
+}
+
 
 class IndigoRenderEngine(bpy.types.RenderEngine):
     bl_idname = 'IndigoAPI'
     bl_label = "IndigoAPI"
-    bl_use_preview = False
+    bl_use_preview = True
     bl_use_shading_nodes = True
     bl_use_shading_nodes_custom = False
+
 
     def export_object(self, obj, matrix = None, name = ""):
         if obj.type not in {'MESH', 'CURVE', 'SURFACE', 'FONT', 'META'}:
@@ -89,17 +123,18 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
             return True
         return False
 
+    def update_render_passes(self, scene=None, renderlayer=None):
+        self.register_pass(scene, renderlayer, "Combined", 4, "RGBA", 'COLOR')
+        
+        if scene:
+            aovs = scene.indigo_engine.aovs
+            for aov in indigo_aovs.keys():
+                if getattr(aovs, aov):
+                    self.register_pass(scene, renderlayer, indigo_aovs[aov].name, indigo_aovs[aov].num_components, indigo_aovs[aov].channel_ids, indigo_aovs[aov].channel_type)
 
     def __init__(self):
 
-        '''
-        Find Indigo binaries and data
-        '''
-        directory = os.path.dirname(os.path.realpath(blendigo.pyIndigo.__file__))
-        indigo_dll_path = os.path.join(directory, 'bin')
-        appdata_path = os.path.join(directory, 'bin')
-
-        self.ctx = Context()
+        self.ctx = None
         self.indigo_renderer = None
         self.scene = None
         self.exported_meshes = {}
@@ -107,11 +142,8 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
         self.cancel_token = False
         self.is_initialized = False
 
-        res = self.ctx.Initialize(indigo_dll_path, appdata_path)
-        if res == -1:
-            raise Exception("Indigo Context failed to initialize. Check paths.")
-
-        self.is_initialized = True
+        self.scene_data = None
+        self.draw_data = None        
 
     def chunks(self, l, n):
         for i in range(0, len(l), n):
@@ -122,8 +154,18 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
 
     def render(self, depsgraph):
 
-        if not self.is_initialized:
-            print("Indigo is not initialized.")
+        self.ctx = Context()
+
+        '''
+        Find Indigo binaries and data
+        '''
+        directory = os.path.dirname(os.path.realpath(blendigo.pyIndigo.__file__))
+        indigo_dll_path = os.path.join(directory, 'bin')
+        appdata_path = os.path.join(directory, 'bin')
+
+        res = self.ctx.Initialize(indigo_dll_path, appdata_path)
+        if res == -1:
+            print ("Indigo Context failed to initialize. Check paths.")
             return
 
         self.scene = depsgraph.scene
@@ -155,6 +197,30 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
         rs.foreground_alpha = render_settings.foreground_alpha
         rs.splat_filter = render_settings.splat_filter
         rs.downsize_filter = render_settings.downsize_filter
+        #rs.use_subres_rendering = True
+
+
+        '''
+        Add render channels
+        '''
+        aovs = self.scene.indigo_engine.aovs
+        active_aovs = {}
+
+        for aov in indigo_aovs.keys():
+            # TODO: Add special cases for Object and Material IDs
+            if getattr(aovs, aov):
+                if indigo_aovs[aov].name == "Depth":
+                    active_aovs[aov] = indigo_aovs[aov]
+                    rs.depth_channel = True
+                    continue                
+                self.add_pass(indigo_aovs[aov].name, indigo_aovs[aov].num_components, indigo_aovs[aov].channel_ids)
+                if hasattr(rs, aov):
+                    setattr(rs, aov, True)
+                    active_aovs[aov] = indigo_aovs[aov]
+
+        '''
+        Create Indigo Scene
+        '''
 
         scn = Scene()
         scn.AddRenderSettings(rs)
@@ -245,17 +311,19 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
         render_buffer = RenderBuffer(scn)
 
         tone_mapper = ToneMapper(self.ctx, render_buffer, uint8_buffer, float_buffer)
+        tone_mapper.SetSourceRenderChannel(0)
+
         tone_mapper.Update(scn)
 
         self.indigo_renderer.InitializeWithScene(self.ctx, scn, render_buffer, tone_mapper)
         self.indigo_renderer.Start()
+        #self.indigo_renderer.realtime = True
 
         max_pass = 20
         current_pass = 0
 
-        raw_buffer = float_buffer.get_data_pointer()
-
-        float_buffer.create_dummy()
+        float_buffer.create_dummy( self.resolution_x, self.resolution_y, 4)
+        uint8_buffer.create_dummy( self.resolution_x, self.resolution_y, 4)
 
         shape = int(self.resolution_y * self.resolution_x)
         shape_x = int(self.resolution_x)
@@ -271,20 +339,62 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
         while self.test_break() is False:
 
             start = time.time()
-            result = self.begin_result(0, 0, self.resolution_x, self.resolution_y)
             self.indigo_renderer.Poll()
 
-            tone_mapper.TonemapBlocking()
+            if tone_mapper.IsImageFresh():
 
-            raw_pixels = np.ctypeslib.as_array(float_buffer.get_flipped(), (shape_x, shape_y, 4))
+                result = self.begin_result(0, 0, self.resolution_x, self.resolution_y)
 
-            pixels = np.multiply(raw_pixels, np.array([scale, scale, scale, 1]))
-            pixels.shape = (shape, 4)
+                '''
+                Get master channel
+                '''
 
-            result.layers[0].passes["Combined"].rect = pixels
-            
-            self.end_result(result)
-            self.update_stats("SPP: %.2f" % self.indigo_renderer.samples_per_pixel, "Num. passes: %i" % current_pass)
+                tone_mapper.SetSourceRenderChannel(0)
+                tone_mapper.TonemapBlocking()
+
+                if float_buffer.width > 0 and float_buffer.height > 0:
+
+                    #raw_pixels = np.ctypeslib.as_array(float_buffer.get_flipped(), (shape_x, shape_y, 4))
+                    #raw_pixels = np.ctypeslib.as_array(float_buffer.get_flipped(), (float_buffer.width, float_buffer.height, float_buffer.num_components))
+
+                    #pixels = np.multiply(raw_pixels, np.array([scale, scale, scale, 1]))
+
+                    pixels = np.ctypeslib.as_array(float_buffer.get_data_pointer(), (float_buffer.width, float_buffer.height, float_buffer.num_components))
+
+                    pixels.shape = (float_buffer.width * float_buffer.height, float_buffer.num_components)
+
+                    result.layers[0].passes["Combined"].rect = pixels
+                    
+
+                    '''
+                    Get other channels
+                    '''
+                    for aov in active_aovs.keys():
+                        if self.test_break():
+                            break
+
+                        print ("Channel: {0}, {1}".format(active_aovs[aov].name, active_aovs[aov].indigo_id.value))
+
+                        tone_mapper.SetSourceRenderChannel(active_aovs[aov].indigo_id.value)
+                        tone_mapper.TonemapBlocking()
+                      
+                        #raw_pixels = np.ctypeslib.as_array(float_buffer.get_flipped(), (float_buffer.width, float_buffer.height, float_buffer.num_components))
+                        #raw_pixels = np.ctypeslib.as_array(uint8_buffer.get_flipped(), (uint8_buffer.width, uint8_buffer.height, uint8_buffer.num_components)).astype(float)
+
+                        #raw_pixels = np.ctypeslib.as_array(float_buffer.get_flipped(), (shape_x, shape_y, active_aovs[aov].num_components))
+
+                        #if active_aovs[aov].channel_type == 'RGBA':
+                        #    pixels = np.multiply(raw_pixels, np.array([scale, scale, scale, 1]))
+
+                        pixels = np.ctypeslib.as_array(float_buffer.get_data_pointer(), (float_buffer.width, float_buffer.height, float_buffer.num_components))
+
+                        pixels.shape = (shape, float_buffer.num_components)
+
+                        result.layers[0].passes[active_aovs[aov].name].rect = pixels
+                    
+
+                self.end_result(result)
+                self.update_stats("SPP: %.2f" % self.indigo_renderer.samples_per_pixel, "Num. passes: %i" % current_pass)
 
 
             if self.indigo_renderer.samples_per_pixel > haltspp:
@@ -309,5 +419,138 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
         print("Num passes: %i" % current_pass)
         return
 
+    # For viewport renders, this method gets called once at the start and
+    # whenever the scene or 3D viewport changes. This method is where data
+    # should be read from Blender in the same thread. Typically a render
+    # thread will be started to do the work while keeping Blender responsive.
+    def view_update(self, context, depsgraph):
+        region = context.region
+        view3d = context.space_data
+        scene = depsgraph.scene
+
+        print(scene.camera)
+
+        # Get viewport dimensions
+        dimensions = region.width, region.height
+
+        if not self.scene_data:
+            # First time initialization
+            self.scene_data = []
+            first_time = True
+
+            # Loop over all datablocks used in the scene.
+            for datablock in depsgraph.ids:
+                pass
+        else:
+            first_time = False
+
+            # Test which datablocks changed
+            for update in depsgraph.updates:
+                print("Datablock updated: ", update.id.name)
+
+            # Test if any material was added, removed or changed.
+            if depsgraph.id_type_updated('MATERIAL'):
+                print("Materials updated")
+
+        # Loop over all object instances in the scene.
+        if first_time or depsgraph.id_type_updated('OBJECT'):
+            for instance in depsgraph.object_instances:
+                pass
+
+    # For viewport renders, this method is called whenever Blender redraws
+    # the 3D viewport. The renderer is expected to quickly draw the render
+    # with OpenGL, and not perform other expensive work.
+    # Blender will draw overlays for selection and editing on top of the
+    # rendered image automatically.
+    def view_draw(self, context, depsgraph):
+        region = context.region
+        scene = depsgraph.scene
+
+        # Get viewport dimensions
+        dimensions = region.width, region.height
+
+        # Bind shader that converts from scene linear to display space,
+        bgl.glEnable(bgl.GL_BLEND)
+        bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA);
+        self.bind_display_space_shader(scene)
+
+        if not self.draw_data or self.draw_data.dimensions != dimensions:
+            self.draw_data = CustomDrawData(dimensions)
+
+        self.draw_data.draw()
+
+        self.unbind_display_space_shader()
+        bgl.glDisable(bgl.GL_BLEND)
+
     def __del__(self):
         pass
+
+
+class CustomDrawData:
+    def __init__(self, dimensions):
+        # Generate dummy float image buffer
+        self.dimensions = dimensions
+        width, height = dimensions
+
+        pixels = [0.1, 0.2, 0.1, 1.0] * width * height
+        pixels = bgl.Buffer(bgl.GL_FLOAT, width * height * 4, pixels)
+
+        # Generate texture
+        self.texture = bgl.Buffer(bgl.GL_INT, 1)
+        bgl.glGenTextures(1, self.texture)
+        bgl.glActiveTexture(bgl.GL_TEXTURE0)
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, self.texture[0])
+        bgl.glTexImage2D(bgl.GL_TEXTURE_2D, 0, bgl.GL_RGBA16F, width, height, 0, bgl.GL_RGBA, bgl.GL_FLOAT, pixels)
+        bgl.glTexParameteri(bgl.GL_TEXTURE_2D, bgl.GL_TEXTURE_MIN_FILTER, bgl.GL_LINEAR)
+        bgl.glTexParameteri(bgl.GL_TEXTURE_2D, bgl.GL_TEXTURE_MAG_FILTER, bgl.GL_LINEAR)
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, 0)
+
+        # Bind shader that converts from scene linear to display space,
+        # use the scene's color management settings.
+        shader_program = bgl.Buffer(bgl.GL_INT, 1)
+        bgl.glGetIntegerv(bgl.GL_CURRENT_PROGRAM, shader_program);
+
+        # Generate vertex array
+        self.vertex_array = bgl.Buffer(bgl.GL_INT, 1)
+        bgl.glGenVertexArrays(1, self.vertex_array)
+        bgl.glBindVertexArray(self.vertex_array[0])
+
+        texturecoord_location = bgl.glGetAttribLocation(shader_program[0], "texCoord");
+        position_location = bgl.glGetAttribLocation(shader_program[0], "pos");
+
+        bgl.glEnableVertexAttribArray(texturecoord_location);
+        bgl.glEnableVertexAttribArray(position_location);
+
+        # Generate geometry buffers for drawing textured quad
+        position = [0.0, 0.0, width, 0.0, width, height, 0.0, height]
+        position = bgl.Buffer(bgl.GL_FLOAT, len(position), position)
+        texcoord = [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
+        texcoord = bgl.Buffer(bgl.GL_FLOAT, len(texcoord), texcoord)
+
+        self.vertex_buffer = bgl.Buffer(bgl.GL_INT, 2)
+
+        bgl.glGenBuffers(2, self.vertex_buffer)
+        bgl.glBindBuffer(bgl.GL_ARRAY_BUFFER, self.vertex_buffer[0])
+        bgl.glBufferData(bgl.GL_ARRAY_BUFFER, 32, position, bgl.GL_STATIC_DRAW)
+        bgl.glVertexAttribPointer(position_location, 2, bgl.GL_FLOAT, bgl.GL_FALSE, 0, None)
+
+        bgl.glBindBuffer(bgl.GL_ARRAY_BUFFER, self.vertex_buffer[1])
+        bgl.glBufferData(bgl.GL_ARRAY_BUFFER, 32, texcoord, bgl.GL_STATIC_DRAW)
+        bgl.glVertexAttribPointer(texturecoord_location, 2, bgl.GL_FLOAT, bgl.GL_FALSE, 0, None)
+
+        bgl.glBindBuffer(bgl.GL_ARRAY_BUFFER, 0)
+        bgl.glBindVertexArray(0)
+
+    def __del__(self):
+        bgl.glDeleteBuffers(2, self.vertex_buffer)
+        bgl.glDeleteVertexArrays(1, self.vertex_array)
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, 0)
+        bgl.glDeleteTextures(1, self.texture)
+
+    def draw(self):
+        bgl.glActiveTexture(bgl.GL_TEXTURE0)
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, self.texture[0])
+        bgl.glBindVertexArray(self.vertex_array[0])
+        bgl.glDrawArrays(bgl.GL_TRIANGLE_FAN, 0, 4);
+        bgl.glBindVertexArray(0)
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, 0)

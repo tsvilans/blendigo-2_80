@@ -24,7 +24,7 @@ from .nodes import *
 
 from .core import IndigoRenderEngine
 
-from .properties.render_settings import IndigoRendererProperties
+from .properties.render_settings import IndigoRendererProperties, IndigoRendererChannels
 from .properties.camera import IndigoCameraProperties
 from .properties.light import IndigoLightSunProperties, IndigoLightHemiProperties
 from .properties.material import IndigoMaterialProperties, IndigoTextureProperties
@@ -36,6 +36,7 @@ from .ui.light import INDIGO_PT_lights, INDIGO_PT_light_sun, INDIGO_PT_light_hem
 
 classes = [
     IndigoRenderEngine, 
+    IndigoRendererChannels,
     IndigoRendererProperties,
     IndigoCameraProperties,
 

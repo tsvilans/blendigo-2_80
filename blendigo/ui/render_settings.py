@@ -85,7 +85,6 @@ class INDIGO_PT_render_settings(bpy.types.Panel):
         #sr = sub.row()
         #sr.prop(indigo_engine, 'period_save')
         
-        col = layout.column()
         col.separator()
         
         col.label(text="System Settings:")
@@ -99,6 +98,29 @@ class INDIGO_PT_render_settings(bpy.types.Panel):
         sr = sub.row()
         sr.prop(indigo_engine, 'clamp_contributions')
         sr.prop(indigo_engine, 'max_contributions')
+
+        col.separator()
+        col.label(text="Render Channels:")
+
+        box = col.box()
+        box.prop(indigo_engine, 'aovs')
+        sub = box.column()
+        sub.prop(indigo_engine.aovs, 'direct_lighting_channel')
+        sub.prop(indigo_engine.aovs, 'position_channel')
+        sub.prop(indigo_engine.aovs, 'depth_channel')
+        sub.prop(indigo_engine.aovs, 'emission_lighting_channel')
+        sub.prop(indigo_engine.aovs, 'indirect_lighting_channel')
+        sub.prop(indigo_engine.aovs, 'material_id_channel')
+        sub.prop(indigo_engine.aovs, 'normals_channel')
+        sub.prop(indigo_engine.aovs, 'normals_pre_bump_channel')
+        sub.prop(indigo_engine.aovs, 'object_id_channel')
+        sub.prop(indigo_engine.aovs, 'refraction_lighting_channel')
+        sub.prop(indigo_engine.aovs, 'sss_lighting_channel')
+        sub.prop(indigo_engine.aovs, 'foreground_channel')
+        sub.prop(indigo_engine.aovs, 'participating_media_lighting_channel')
+        sub.prop(indigo_engine.aovs, 'specular_reflection_lighting_channel')
+        sub.prop(indigo_engine.aovs, 'transmission_lighting_channel')
+
         #rc = sr.column()
         #rc.prop(indigo_engine, 'threads')
         #rc.enabled = not indigo_engine.threads_auto

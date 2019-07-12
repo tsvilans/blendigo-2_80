@@ -1,6 +1,120 @@
 import bpy
 
-from bpy.props import StringProperty, BoolProperty, FloatProperty, CollectionProperty, EnumProperty, IntProperty
+from bpy.props import StringProperty, BoolProperty, FloatProperty, CollectionProperty, EnumProperty, IntProperty, PointerProperty
+
+class IndigoRendererChannels(bpy.types.PropertyGroup):
+
+    direct_lighting_channel: BoolProperty(
+        name="Direct lighting channel",
+        description="Direct lighting channel.",
+        default=False,
+        )
+
+    position_channel: BoolProperty(
+        name="Position channel",
+        description="Position channel.",
+        default=False,
+        )
+
+    depth_channel: BoolProperty(
+        name="Depth channel",
+        description="Depth channel.",
+        default=False,
+        )
+
+    emission_lighting_channel: BoolProperty(
+        name="Emission lighting channel",
+        description="Emission lighting channel.",
+        default=False,
+        )
+
+    indirect_lighting_channel: BoolProperty(
+        name="Indirect lighting channel",
+        description="Indirect lighting channel.",
+        default=False,
+        )
+
+    material_id_channel: BoolProperty(
+        name="Material id channel",
+        description="Material id channel.",
+        default=False,
+        )
+
+    normals_channel: BoolProperty(
+        name="Normals channel",
+        description="Normals channel.",
+        default=False,
+        )
+
+    normals_pre_bump_channel: BoolProperty(
+        name="Normals pre bump channel",
+        description="Normals pre bump channel.",
+        default=False,
+        )
+
+    object_id_channel: BoolProperty(
+        name="Object id channel",
+        description="Object id channel.",
+        default=False,
+        )
+
+    refraction_lighting_channel: BoolProperty(
+        name="Refraction lighting channel",
+        description="Refraction lighting channel.",
+        default=False,
+        )
+
+    sss_lighting_channel: BoolProperty(
+        name="Sss lighting channel",
+        description="Sss lighting channel.",
+        default=False,
+        )
+
+    foreground_channel: BoolProperty(
+        name="Foreground channel",
+        description="Foreground channel.",
+        default=False,
+        )
+
+    participating_media_lighting_channel: BoolProperty(
+        name="Participating media lighting channel",
+        description="Participating media lighting channel.",
+        default=False,
+        )
+
+    specular_reflection_lighting_channel: BoolProperty(
+        name="Specular reflection lighting channel",
+        description="Specular reflection lighting channel.",
+        default=False,
+        )
+
+    transmission_lighting_channel: BoolProperty(
+        name="Transmission lighting channel",
+        description="Transmission lighting channel.",
+        default=False,
+        )
+
+    '''
+    def draw(self, context):
+        layout = self.layout
+        col = layout.column()
+        col.prop(self, 'direct_lighting_channel')
+        col.prop(self, 'position_channel')
+        col.prop(self, 'depth_channel')
+        col.prop(self, 'emission_lighting_channel')
+        col.prop(self, 'indirect_lighting_channel')
+        col.prop(self, 'material_id_channel')
+        col.prop(self, 'normals_channel')
+        col.prop(self, 'normals_pre_bump_channel')
+        col.prop(self, 'object_id_channel')
+        col.prop(self, 'refraction_lighting_channel')
+        col.prop(self, 'sss_lighting_channel')
+        col.prop(self, 'foreground_channel')
+        col.prop(self, 'participating_media_lighting_channel')
+        col.prop(self, 'specular_reflection_lighting_channel')
+        col.prop(self, 'transmission_lighting_channel')
+    '''
+
 
 class IndigoRendererProperties(bpy.types.PropertyGroup):
     metropolis: BoolProperty(
@@ -101,4 +215,8 @@ class IndigoRendererProperties(bpy.types.PropertyGroup):
         description="Maximum contribution",
         default=100.0,
         min=1.0,
-        )    
+        )
+
+    aovs: PointerProperty(type=IndigoRendererChannels)
+
+ 
