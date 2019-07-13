@@ -78,7 +78,7 @@ class IndigoEmissionShaderNode(Node, IndigoShaderNode):
         self.outputs.new('NodeSocketShader', "Emission")
 
     def convert(self):
-        print("Converting (IndigoEmissionShaderNode)")
+        #print("Converting (IndigoEmissionShaderNode)")
 
         emission = None
         base_emission = None

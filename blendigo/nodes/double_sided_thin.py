@@ -74,7 +74,7 @@ class IndigoDoubleSidedThinShaderNode(Node, IndigoShaderNode):
 
 
     def convert(self, name, exporter):
-        print("Converting {} (IndigoDoubleSidedThinShaderNode)".format(name))
+        #print("Converting {} (IndigoDoubleSidedThinShaderNode)".format(name))
 
         indigo_material = DoubleSidedThinMaterial(name)
         indigo_material.back_roughness = WavelengthIndependentParam.Uniform(self.back_roughness)

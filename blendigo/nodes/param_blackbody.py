@@ -39,7 +39,7 @@ class IndigoParamBlackbodyShaderNode(Node, IndigoShaderNode):
         self.outputs.new('NodeSocketShader', "Blackbody")
 
     def convert(self):
-        print("Converting (IndigoParamBlackbodyShaderNode)")
+        #print("Converting (IndigoParamBlackbodyShaderNode)")
 
         return WavelengthDependentParam.Blackbody(self.temperature, self.gain * (10 ** self.exp))
 

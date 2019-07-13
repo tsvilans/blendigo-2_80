@@ -27,7 +27,7 @@ class IndigoDiffuseShaderNode(Node, IndigoShaderNode):
 
 
     def convert(self, name, exporter):
-        print("Converting {} (IndigoDiffuseShaderNode)".format(name))
+        #print("Converting {} (IndigoDiffuseShaderNode)".format(name))
 
         indigo_material = DiffuseMaterial(name)
 

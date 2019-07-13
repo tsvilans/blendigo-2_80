@@ -41,8 +41,7 @@ class IndigoPhongShaderNode(Node, IndigoShaderNode):
 
 
     def convert(self, name, exporter):
-
-        print("Converting {} (IndigoPhongShaderNode)".format(name))
+        #print("Converting {} (IndigoPhongShaderNode)".format(name))
 
         indigo_material = PhongMaterial(name, self.ior)
 
@@ -57,6 +56,8 @@ class IndigoPhongShaderNode(Node, IndigoShaderNode):
         roughness = self._process_input('Roughness', WavelengthIndependentParam, WavelengthIndependentParam.Uniform(0.7), False)
         if roughness:
             indigo_material.roughness = roughness   
+            
+        self._convert_common_inputs(indigo_material, name, exporter)
 
         return indigo_material
 

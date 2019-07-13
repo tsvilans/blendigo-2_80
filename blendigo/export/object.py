@@ -11,7 +11,7 @@ def export_indigo_object(obj, indigo_mesh, matrix=None):
                 return False
         
         
-        indigo_model = Model(obj.name, indigo_mesh)
+        indigo_model = Model.New(obj.name, indigo_mesh)
         #print ("   mesh name: %s" % obj.data.name)
         #print ("   mesh ptr : %s" % self.exported_meshes[obj.data.name].Ptr)
         if matrix == None:

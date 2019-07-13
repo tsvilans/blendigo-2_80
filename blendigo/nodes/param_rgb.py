@@ -34,7 +34,7 @@ class IndigoParamRGBShaderNode(Node, IndigoShaderNode):
         self.outputs.new('NodeSocketShader', "RGB")
 
     def convert(self):
-        print("Converting (IndigoParamRGBShaderNode)")
+        #print("Converting (IndigoParamRGBShaderNode)")
 
         multiplier = self.gain * (10 ** self.exp)
 

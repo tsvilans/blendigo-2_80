@@ -27,7 +27,7 @@ class IndigoSpecularShaderNode(Node, IndigoShaderNode):
         self.outputs.new('NodeSocketShader', "Specular")
 
     def convert(self, name, exporter):
-        print("Converting {} (IndigoSpecularShaderNode)".format(name))
+        #print("Converting {} (IndigoSpecularShaderNode)".format(name))
 
 
         medium = Medium.Basic("DefaultMedium", 1.5, 10)

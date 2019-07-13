@@ -135,7 +135,7 @@ class MaterialExporter(object):
                     indigo_material.roughness = WavelengthIndependentParam.Texture(bpy.path.abspath(tex.path), tex.gamma, tex.A, tex.B, tex.C)
             else:
                 indigo_material.roughness = WavelengthIndependentParam.Uniform(material.indigo_material.indigo_material_phong.roughness)
-                print ("   phong roughness {}".format(material.indigo_material.indigo_material_phong.roughness))
+                #print ("   phong roughness {}".format(material.indigo_material.indigo_material_phong.roughness))
 
             if material.indigo_material.indigo_material_colour.colour_type == "spectrum":
                 col = material.indigo_material.indigo_material_colour.colour_SP_rgb
@@ -149,7 +149,7 @@ class MaterialExporter(object):
                     print ("   gamma %f a %f b %f c %f" % (tex.gamma, tex.A, tex.B, tex.C))
                     indigo_material.albedo = WavelengthDependentParam.Texture(bpy.path.abspath(tex.path), tex.gamma, tex.A, tex.B, tex.C)
                 else:
-                    print("   albedo texture failed: " + material.name)
+                    #print("   albedo texture failed: " + material.name)
                     col = material.indigo_material.indigo_material_colour.colour_SP_rgb
                     indigo_material.albedo = WavelengthDependentParam.RGB(col[0], col[1], col[2], 1.0)                
 

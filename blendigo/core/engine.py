@@ -15,18 +15,19 @@ from blendigo.pyIndigo import *
 from blendigo.export import *
 from blendigo.pyIndigo.ToneMapper import ChannelID
 
+TONEMAPPING_TYPE = {'Linear':1000, 'Reinhard':1001, 'Camera':1002, 'Filmic':1003}
 
 class RenderChannel:
-
-    def __init__(self, name, num_components, channel_ids, channel_type, indigo_id):
+    def __init__(self, name, num_components, channel_ids, channel_type, indigo_id, scale_values=False):
         self.name = name
         self.num_components = num_components
         self.channel_ids = channel_ids
         self.channel_type = channel_type
         self.indigo_id = indigo_id
+        self.scale_values = scale_values
 
 indigo_aovs = {
-    "foreground_channel": RenderChannel("Foreground", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_ALPHA),
+    "foreground_channel": RenderChannel("Foreground", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_ALPHA, True),
 
     "normals_channel": RenderChannel("Normals", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_NORMALS),
     "normals_pre_bump_channel": RenderChannel("Normals pre bump", 3, 'XYZ', 'VECTOR', ChannelID.CHANNEL_NORMALS_PRE_BUMP),
@@ -35,15 +36,15 @@ indigo_aovs = {
     "material_id_channel": RenderChannel("Material id", 1, 'X', 'VALUE', ChannelID.CHANNEL_NORMALS),
     "object_id_channel": RenderChannel("Object id", 1, 'X', 'VALUE', ChannelID.CHANNEL_OBJECT_ID),
 
-    "direct_lighting_channel": RenderChannel("Direct lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_DIRECT_LIGHTING),
-    "indirect_lighting_channel": RenderChannel("Indirect lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_INDIRECT_LIGHTING),
-    "specular_reflection_lighting_channel": RenderChannel("Specular reflection lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_SPECULAR_REFLECTION_LIGHTING),
-    "refraction_lighting_channel": RenderChannel("Refraction lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_REFRACTION_LIGHTING),
-    "transmission_lighting_channel": RenderChannel("Transmission lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_TRANSMISSION_LIGHTING),
-    "emission_lighting_channel": RenderChannel("Emission lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_EMISSION_LIGHTING),
-    "participating_media_lighting_channel": RenderChannel("Participating media lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_PARTICIPATING_MEDIA_LIGHTING),
+    "direct_lighting_channel": RenderChannel("Direct lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_DIRECT_LIGHTING, True),
+    "indirect_lighting_channel": RenderChannel("Indirect lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_INDIRECT_LIGHTING, True),
+    "specular_reflection_lighting_channel": RenderChannel("Specular reflection lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_SPECULAR_REFLECTION_LIGHTING, True),
+    "refraction_lighting_channel": RenderChannel("Refraction lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_REFRACTION_LIGHTING, True),
+    "transmission_lighting_channel": RenderChannel("Transmission lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_TRANSMISSION_LIGHTING, True),
+    "emission_lighting_channel": RenderChannel("Emission lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_EMISSION_LIGHTING, True),
+    "participating_media_lighting_channel": RenderChannel("Participating media lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_PARTICIPATING_MEDIA_LIGHTING, True),
 
-    "sss_lighting_channel": RenderChannel("Sss lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_SSS_LIGHTING),
+    "sss_lighting_channel": RenderChannel("Sss lighting", 4, 'RGBA', 'COLOR', ChannelID.CHANNEL_SSS_LIGHTING, True),
 }
 
 
@@ -78,7 +79,7 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
                 indigo_mesh = self.exported_meshes[obj.data.name]
             
             
-            indigo_model = Model(name, indigo_mesh)
+            indigo_model = Model.New(name, indigo_mesh)
 
             if matrix == None:
                 indigo_model.SetTransformation(obj.matrix_world, 0)
@@ -135,11 +136,42 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
     def __init__(self):
 
         self.ctx = None
-        self.indigo_renderer = None
+
+        if self.ctx is None:
+            self.ctx = Context()
+            '''
+            Find Indigo binaries and data
+            '''
+            directory = os.path.dirname(os.path.realpath(blendigo.pyIndigo.__file__))
+            indigo_dll_path = os.path.join(directory, 'bin')
+            appdata_path = os.path.join(directory, 'bin')
+
+            res = self.ctx.Initialize(indigo_dll_path, appdata_path)
+            if res == -1:
+                print ("Indigo Context failed to initialize. Check paths.")
+                return
+
+        '''
+        Load preview scene
+        '''
+        self.indigo_preview_scene = None
+        self.indigo_preview_sphere = None
+        self.indigo_preview_base = None
+        self.indigo_preview_material = None
+
+        scene_path = r"C:\git\pyIndigo\pyIndigo\bin\data\preview_scenes\mat_db\matpreviewscene_igmesh.igs"
+        scene_dir = r"C:\git\pyIndigo\pyIndigo\bin\data\preview_scenes\mat_db"
+        indigo_dir = r"C:\git\pyIndigo\pyIndigo\bin"
+
+        self.indigo_preview_scene = Scene.FromFile(scene_path, scene_dir, indigo_dir)
+
+        self.preview_sphere = self.indigo_preview_scene.GetModel("preview_sphere instance")
+        self.preview_base = self.indigo_preview_scene.GetModel("preview_base instance")
+
         self.scene = None
         self.exported_meshes = {}
         self.exported_objects = {}
-        self.cancel_token = False
+        #self.cancel_token = False
         self.is_initialized = False
 
         self.scene_data = None
@@ -154,152 +186,158 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
 
     def render(self, depsgraph):
 
-        self.ctx = Context()
-
-        '''
-        Find Indigo binaries and data
-        '''
-        directory = os.path.dirname(os.path.realpath(blendigo.pyIndigo.__file__))
-        indigo_dll_path = os.path.join(directory, 'bin')
-        appdata_path = os.path.join(directory, 'bin')
-
-        res = self.ctx.Initialize(indigo_dll_path, appdata_path)
-        if res == -1:
-            print ("Indigo Context failed to initialize. Check paths.")
-            return
-
         self.scene = depsgraph.scene
+        render_settings = self.scene.indigo_engine
+        scale = render_settings.buffer_multiplier
+        active_aovs = {}
+        logs = True
+
         self.exported_meshes = {}
         self.exported_objects = {}
         self.material_exporter = ShaderNodeExporter()
-        '''
+
         if self.is_preview:
-            self.render_preview(scene)
+            logs = False
+            material = None
+            for instance in depsgraph.object_instances:
+                if instance.object.name == "preview_sphere":
+                    material = instance.object.data.materials[0]
+                    break
+
+            self.material_exporter.export(material)
+            
+            indigo_material = self.material_exporter.exported_materials[material.name]
+
+            self.indigo_preview_scene.AddMaterial(indigo_material)
+            self.preview_base.SetMaterials([indigo_material])    
+            self.preview_sphere.SetMaterials([indigo_material])
+
+            settings = self.indigo_preview_scene.GetRenderSettings()
+            settings.width = self.resolution_x
+            settings.height = self.resolution_y
+
+            tm = self.indigo_preview_scene.GetTonemapping()
+            tm.type = TONEMAPPING_TYPE['Linear']
+            tm.scale = 4 / scale
+
+            indigo_scene = self.indigo_preview_scene
+
         else:
-            self.render_scene(scene)
-        '''
+            '''
+            Set Indigo render settings
+            '''
+            rs = RenderSettings()
+            rs.width = self.resolution_x
+            rs.height = self.resolution_y
 
-        '''
-        Set Indigo render settings
-        '''
-        rs = RenderSettings()
-        rs.width = self.resolution_x
-        rs.height = self.resolution_y
-
-        render_settings = self.scene.indigo_engine
-
-        rs.metropolis = render_settings.metropolis
-        rs.bidirectional = render_settings.bidirectional
-        rs.vignetting = self.scene.camera.data.indigo_camera.vignetting
-        rs.halt_samples = render_settings.haltspp
-        rs.halt_time = render_settings.halttime
-        rs.supersampling = render_settings.supersampling
-        rs.foreground_alpha = render_settings.foreground_alpha
-        rs.splat_filter = render_settings.splat_filter
-        rs.downsize_filter = render_settings.downsize_filter
-        #rs.use_subres_rendering = True
+            rs.metropolis = render_settings.metropolis
+            rs.bidirectional = render_settings.bidirectional
+            rs.vignetting = self.scene.camera.data.indigo_camera.vignetting
+            rs.halt_samples = render_settings.haltspp
+            rs.halt_time = render_settings.halttime
+            rs.supersampling = render_settings.supersampling
+            rs.foreground_alpha = render_settings.foreground_alpha
+            rs.splat_filter = render_settings.splat_filter
+            rs.downsize_filter = render_settings.downsize_filter
+            #rs.use_subres_rendering = True
 
 
-        '''
-        Add render channels
-        '''
-        aovs = self.scene.indigo_engine.aovs
-        active_aovs = {}
+            '''
+            Add render channels
+            '''
+            aovs = self.scene.indigo_engine.aovs
 
-        for aov in indigo_aovs.keys():
-            # TODO: Add special cases for Object and Material IDs
-            if getattr(aovs, aov):
-                if indigo_aovs[aov].name == "Depth":
-                    active_aovs[aov] = indigo_aovs[aov]
-                    rs.depth_channel = True
-                    continue                
-                self.add_pass(indigo_aovs[aov].name, indigo_aovs[aov].num_components, indigo_aovs[aov].channel_ids)
-                if hasattr(rs, aov):
-                    setattr(rs, aov, True)
-                    active_aovs[aov] = indigo_aovs[aov]
+            for aov in indigo_aovs.keys():
+                # TODO: Add special cases for Object and Material IDs
+                if getattr(aovs, aov):
+                    if indigo_aovs[aov].name == "Depth":
+                        active_aovs[aov] = indigo_aovs[aov]
+                        rs.depth_channel = True
+                        continue                
+                    self.add_pass(indigo_aovs[aov].name, indigo_aovs[aov].num_components, indigo_aovs[aov].channel_ids)
+                    if hasattr(rs, aov):
+                        setattr(rs, aov, True)
+                        active_aovs[aov] = indigo_aovs[aov]
 
-        '''
-        Create Indigo Scene
-        '''
+            '''
+            Create Indigo Scene
+            '''
+            indigo_scene = Scene.New()
+            indigo_scene.AddRenderSettings(rs)
+            
 
-        scn = Scene()
-        scn.AddRenderSettings(rs)
-        
+            '''
+            Export materials, objects, and mediums
+            '''
 
-        '''
-        Export materials, objects, and mediums
-        '''
+            '''
+            for medium in self.scene.indigo_material_medium.medium:
+               print (medium.name)
+               indigo_medium = SceneNodeMedium(medium.name, Medium.Basic(medium.name, medium.medium_ior, medium.precedence))
+               self.material_exporter.exported_mediums[medium.name] = indigo_medium
+            '''
+               
+            for instance in depsgraph.object_instances:
+                if self.test_break():
+                    return
 
-        '''
-        for medium in self.scene.indigo_material_medium.medium:
-           print (medium.name)
-           indigo_medium = SceneNodeMedium(medium.name, Medium.Basic(medium.name, medium.medium_ior, medium.precedence))
-           self.material_exporter.exported_mediums[medium.name] = indigo_medium
-        '''
+                if instance.is_instance:
+                    self.export_object(instance.object, instance.matrix_world, instance.object.name + "_({})".format(instance.random_id))
+                else:
+                    self.export_object(instance.object, instance.matrix_world)
 
-        #for material in bpy.data.materials:
-        #    if material.name not in self.material_exporter.exported_materials.keys():
-        #        pass
-        #    self.material_exporter.export(material)
-        #    scn.AddMaterial(self.material_exporter.exported_materials[material.name])
-           
-        for instance in depsgraph.object_instances:
-            if self.test_break():
-                return
+            for mesh in self.exported_meshes:
+                indigo_scene.AddMesh(self.exported_meshes[mesh])
 
-            if instance.is_instance:
-                self.export_object(instance.object, instance.matrix_world, instance.object.name + "_({})".format(instance.random_id))
-            else:
-                self.export_object(instance.object, instance.matrix_world)
+            for obj in self.exported_objects:
+                indigo_scene.AddModel(self.exported_objects[obj])
 
-        for mesh in self.exported_meshes:
-            scn.AddMesh(self.exported_meshes[mesh])
+            for med in self.material_exporter.exported_mediums:
+                indigo_scene.AddMedium(self.material_exporter.exported_mediums[med])
 
-        for obj in self.exported_objects:
-            scn.AddModel(self.exported_objects[obj])
+            for mat in self.material_exporter.exported_materials:
+                indigo_scene.AddMaterial(self.material_exporter.exported_materials[mat])
 
-        for med in self.material_exporter.exported_mediums:
-            scn.AddMedium(self.material_exporter.exported_mediums[med])
+            '''
+            Export tonemapping
+            '''
+            tm = Tonemapping()
+            tm.type = TONEMAPPING_TYPE['Linear']
+            tm.iso = self.scene.camera.data.indigo_camera.iso
+            #tm.ev = self.scene.camera.data.indigo_tonemapping.camera_ev
 
-        for mat in self.material_exporter.exported_materials:
-            scn.AddMaterial(self.material_exporter.exported_materials[mat])
+            tm.scale = 1 / scale
 
-        print ("Exporting tonemapping...")
-        tonemapping_type = {'Linear':1000, 'Reinhard':1001, 'Camera':1002, 'Filmic':1003}
-        tm = Tonemapping()
-        tm.type = tonemapping_type['Linear']
-        tm.iso = self.scene.camera.data.indigo_camera.iso
-        #tm.ev = self.scene.camera.data.indigo_tonemapping.camera_ev
+            '''
+            Export camera
+            '''            
+            cam = export_camera(bpy.context.scene.camera)
+            indigo_scene.AddCamera(cam)
 
-        scale = render_settings.buffer_multiplier
-        tm.scale = 1 / scale
-        
-        print ("Exporting camera...")
-        cam = export_camera(bpy.context.scene.camera)
-        scn.AddCamera(cam)
+            '''
+            Export background
+            '''
+            bg = export_background(depsgraph)
+            if bg is not None:
+                indigo_scene.AddBackground(bg)
 
-        print("Exporting background...")
-        bg = export_background(depsgraph)
-        if bg is not None:
-            scn.AddBackground(bg)
+            indigo_scene.AddTonemapping(tm)
 
-        scn.AddTonemapping(tm)
+            '''
+            Launch Indigo externally
+            '''
+            if render_settings.write_to_xml:
+                igs_name = "Blendigo280_test"
+                igs_path = os.path.join("C:/tmp", igs_name + ".igs")
+                print ("Writing to XML...")
+                indigo_scene.WriteToXML(igs_path)
 
-        '''
-        Launch Indigo externally
-        '''
-        if render_settings.write_to_xml:
-            igs_name = "Blendigo280_test"
-            igs_path = os.path.join("C:/tmp", igs_name + ".igs")
-            print ("Writing to XML...")
-            scn.WriteToXML(igs_path)
+                if render_settings.external:
+                    import subprocess
+                    tm.scale = 1.0
 
-            if render_settings.external:
-                import subprocess
-                tm.scale = 1.0
-
-                subprocess.run(["C:\\Program Files\\Indigo Renderer\\indigo.exe", igs_path])
-                return
+                    subprocess.run(["C:\\Program Files\\Indigo Renderer\\indigo.exe", igs_path])
+                    return
 
         '''
         Launch Indigo internally
@@ -308,14 +346,15 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
 
         float_buffer = FloatBuffer()
         uint8_buffer = UInt8Buffer()
-        render_buffer = RenderBuffer(scn)
+        render_buffer = RenderBuffer(indigo_scene)
 
         tone_mapper = ToneMapper(self.ctx, render_buffer, uint8_buffer, float_buffer)
         tone_mapper.SetSourceRenderChannel(0)
 
-        tone_mapper.Update(scn)
+        tone_mapper.Update(indigo_scene)
 
-        self.indigo_renderer.InitializeWithScene(self.ctx, scn, render_buffer, tone_mapper)
+
+        self.indigo_renderer.InitializeWithScene(self.ctx, indigo_scene, render_buffer, tone_mapper)
         self.indigo_renderer.Start()
         #self.indigo_renderer.realtime = True
 
@@ -332,14 +371,14 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
         interval = 1.0
 
         if render_settings.haltspp < 1:
-            haltspp = 100
+            haltspp = 1000
         else:
             haltspp = render_settings.haltspp
 
         while self.test_break() is False:
 
             start = time.time()
-            self.indigo_renderer.Poll()
+            self.indigo_renderer.Poll(logs)
 
             if tone_mapper.IsImageFresh():
 
@@ -362,6 +401,7 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
                     pixels = np.ctypeslib.as_array(float_buffer.get_data_pointer(), (float_buffer.width, float_buffer.height, float_buffer.num_components))
 
                     pixels.shape = (float_buffer.width * float_buffer.height, float_buffer.num_components)
+                    pixels = np.multiply(pixels, np.array([scale, scale, scale, 1]))
 
                     result.layers[0].passes["Combined"].rect = pixels
                     
@@ -373,7 +413,7 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
                         if self.test_break():
                             break
 
-                        print ("Channel: {0}, {1}".format(active_aovs[aov].name, active_aovs[aov].indigo_id.value))
+                        #print ("Channel: {0}, {1}".format(active_aovs[aov].name, active_aovs[aov].indigo_id.value))
 
                         tone_mapper.SetSourceRenderChannel(active_aovs[aov].indigo_id.value)
                         tone_mapper.TonemapBlocking()
@@ -389,6 +429,8 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
                         pixels = np.ctypeslib.as_array(float_buffer.get_data_pointer(), (float_buffer.width, float_buffer.height, float_buffer.num_components))
 
                         pixels.shape = (shape, float_buffer.num_components)
+                        if active_aovs[aov].scale_values:
+                            pixels = np.multiply(pixels, np.array([scale, scale, scale, 1]))
 
                         result.layers[0].passes[active_aovs[aov].name].rect = pixels
                     
@@ -409,14 +451,13 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
 
             if (interval < 90):
                 interval *= 1.25
-
-        print("Stopping...")    
+        if logs:
+            print("Stopping...")    
+            print("Num passes: %i" % current_pass)
         
         self.indigo_renderer.Stop()
         self.indigo_renderer.Poll()
         self.indigo_renderer.Shutdown()        
-
-        print("Num passes: %i" % current_pass)
         return
 
     # For viewport renders, this method gets called once at the start and
