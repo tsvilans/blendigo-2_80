@@ -54,7 +54,8 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
     bl_use_preview = True
     bl_use_shading_nodes = True
     bl_use_shading_nodes_custom = False
-
+    bl_use_eevee_viewport = True
+    bl_use_postprocess = True
 
     def export_object(self, obj, matrix = None, name = ""):
         if obj.type not in {'MESH', 'CURVE', 'SURFACE', 'FONT', 'META'}:
@@ -192,6 +193,9 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
         active_aovs = {}
         logs = True
 
+        region = (0, self.resolution_x, 0, self.resolution_y)
+        render_size = (self.resolution_x, self.resolution_y)        
+
         self.exported_meshes = {}
         self.exported_objects = {}
         self.material_exporter = ShaderNodeExporter()
@@ -230,6 +234,18 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
             rs.width = self.resolution_x
             rs.height = self.resolution_y
 
+            if self.scene.render.use_border:
+
+                x1 = int(bpy.context.scene.render.border_min_x * self.resolution_x)
+                x2 = int(bpy.context.scene.render.border_max_x * self.resolution_x)
+                y1 = int(bpy.context.scene.render.border_min_y * self.resolution_y)
+                y2 = int(bpy.context.scene.render.border_max_y * self.resolution_y)
+                rs.set_render_region(x1, x2, y1, y2)
+
+                print("Render region: {0} {1} {2} {3}".format(x1, x2, y1, y2))
+                region = (x1, x2, y1, y2)
+                render_size = (x2-x1, y2-y1)
+
             rs.metropolis = render_settings.metropolis
             rs.bidirectional = render_settings.bidirectional
             rs.vignetting = self.scene.camera.data.indigo_camera.vignetting
@@ -239,6 +255,7 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
             rs.foreground_alpha = render_settings.foreground_alpha
             rs.splat_filter = render_settings.splat_filter
             rs.downsize_filter = render_settings.downsize_filter
+
             #rs.use_subres_rendering = True
 
 
@@ -364,7 +381,7 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
         float_buffer.create_dummy( self.resolution_x, self.resolution_y, 4)
         uint8_buffer.create_dummy( self.resolution_x, self.resolution_y, 4)
 
-        shape = int(self.resolution_y * self.resolution_x)
+        shape = int(self.resolution_x * self.resolution_y)
         shape_x = int(self.resolution_x)
         shape_y = int(self.resolution_y)
 
@@ -375,6 +392,8 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
         else:
             haltspp = render_settings.haltspp
 
+        print ("Region: ", region)
+
         while self.test_break() is False:
 
             start = time.time()
@@ -383,6 +402,7 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
             if tone_mapper.IsImageFresh():
 
                 result = self.begin_result(0, 0, self.resolution_x, self.resolution_y)
+                #result = self.begin_result(region[0], region[2], region[1], region[3])
 
                 '''
                 Get master channel
@@ -399,7 +419,9 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
                     #pixels = np.multiply(raw_pixels, np.array([scale, scale, scale, 1]))
 
                     pixels = np.ctypeslib.as_array(float_buffer.get_data_pointer(), (float_buffer.width, float_buffer.height, float_buffer.num_components))
+                    #pixels = pixels[region[0]:region[1], region[2]:region[3],:]
 
+                    #pixels.shape = ((region[1] - region[0]) * (region[3] - region[2]), float_buffer.num_components)
                     pixels.shape = (float_buffer.width * float_buffer.height, float_buffer.num_components)
                     pixels = np.multiply(pixels, np.array([scale, scale, scale, 1]))
 
@@ -427,8 +449,11 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
                         #    pixels = np.multiply(raw_pixels, np.array([scale, scale, scale, 1]))
 
                         pixels = np.ctypeslib.as_array(float_buffer.get_data_pointer(), (float_buffer.width, float_buffer.height, float_buffer.num_components))
+                        #pixels = pixels[region[0]:region[1], region[2]:region[3],:]
 
+                        #pixels.shape = ((region[1] - region[0]) * (region[3] - region[2]), float_buffer.num_components)
                         pixels.shape = (shape, float_buffer.num_components)
+
                         if active_aovs[aov].scale_values:
                             pixels = np.multiply(pixels, np.array([scale, scale, scale, 1]))
 

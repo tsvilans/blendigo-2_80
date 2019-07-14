@@ -10,6 +10,9 @@ def export_indigo_mesh(mesh):
 
         mesh.calc_loop_triangles()
 
+        if len(mesh.loop_triangles) < 1 or len(mesh.vertices) < 1:
+            return None
+
         num_uv_layers = len(mesh.uv_layers)
         if num_uv_layers > 0 and len(mesh.uv_layers[0].data) > 0:
             uv_ptr = mesh.uv_layers[0].data[0].as_pointer()
