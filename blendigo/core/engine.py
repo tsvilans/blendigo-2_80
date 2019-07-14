@@ -216,13 +216,13 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
             self.preview_base.SetMaterials([indigo_material])    
             self.preview_sphere.SetMaterials([indigo_material])
 
-            settings = self.indigo_preview_scene.GetRenderSettings()
-            settings.width = self.resolution_x
-            settings.height = self.resolution_y
+            indigo_render_settings = self.indigo_preview_scene.GetRenderSettings()
+            indigo_render_settings.width = self.resolution_x
+            indigo_render_settings.height = self.resolution_y
 
             tm = self.indigo_preview_scene.GetTonemapping()
             tm.type = TONEMAPPING_TYPE['Linear']
-            tm.scale = 4 / scale
+            tm.scale = 3 / scale
 
             indigo_scene = self.indigo_preview_scene
 
@@ -230,9 +230,9 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
             '''
             Set Indigo render settings
             '''
-            rs = RenderSettings()
-            rs.width = self.resolution_x
-            rs.height = self.resolution_y
+            indigo_render_settings = RenderSettings()
+            indigo_render_settings.width = self.resolution_x
+            indigo_render_settings.height = self.resolution_y
 
             if self.scene.render.use_border:
 
@@ -240,23 +240,23 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
                 x2 = int(bpy.context.scene.render.border_max_x * self.resolution_x)
                 y1 = int(bpy.context.scene.render.border_min_y * self.resolution_y)
                 y2 = int(bpy.context.scene.render.border_max_y * self.resolution_y)
-                rs.set_render_region(x1, x2, y1, y2)
+                indigo_render_settings.set_render_region(x1, x2, y1, y2)
 
                 print("Render region: {0} {1} {2} {3}".format(x1, x2, y1, y2))
                 region = (x1, x2, y1, y2)
                 render_size = (x2-x1, y2-y1)
 
-            rs.metropolis = render_settings.metropolis
-            rs.bidirectional = render_settings.bidirectional
-            rs.vignetting = self.scene.camera.data.indigo_camera.vignetting
-            rs.halt_samples = render_settings.haltspp
-            rs.halt_time = render_settings.halttime
-            rs.supersampling = render_settings.supersampling
-            rs.foreground_alpha = render_settings.foreground_alpha
-            rs.splat_filter = render_settings.splat_filter
-            rs.downsize_filter = render_settings.downsize_filter
+            indigo_render_settings.metropolis = render_settings.metropolis
+            indigo_render_settings.bidirectional = render_settings.bidirectional
+            indigo_render_settings.vignetting = self.scene.camera.data.indigo_camera.vignetting
+            indigo_render_settings.halt_samples = render_settings.haltspp
+            indigo_render_settings.halt_time = render_settings.halttime
+            indigo_render_settings.supersampling = render_settings.supersampling
+            indigo_render_settings.foreground_alpha = render_settings.foreground_alpha
+            indigo_render_settings.splat_filter = render_settings.splat_filter
+            indigo_render_settings.downsize_filter = render_settings.downsize_filter
 
-            #rs.use_subres_rendering = True
+            #indigo_render_settings.use_subres_rendering = True
 
 
             '''
@@ -269,18 +269,18 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
                 if getattr(aovs, aov):
                     if indigo_aovs[aov].name == "Depth":
                         active_aovs[aov] = indigo_aovs[aov]
-                        rs.depth_channel = True
+                        indigo_render_settings.depth_channel = True
                         continue                
                     self.add_pass(indigo_aovs[aov].name, indigo_aovs[aov].num_components, indigo_aovs[aov].channel_ids)
-                    if hasattr(rs, aov):
-                        setattr(rs, aov, True)
+                    if hasattr(indigo_render_settings, aov):
+                        setattr(indigo_render_settings, aov, True)
                         active_aovs[aov] = indigo_aovs[aov]
 
             '''
             Create Indigo Scene
             '''
             indigo_scene = Scene.New()
-            indigo_scene.AddRenderSettings(rs)
+            indigo_scene.AddRenderSettings(indigo_render_settings)
             
 
             '''
@@ -441,8 +441,6 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
                         tone_mapper.TonemapBlocking()
                       
                         #raw_pixels = np.ctypeslib.as_array(float_buffer.get_flipped(), (float_buffer.width, float_buffer.height, float_buffer.num_components))
-                        #raw_pixels = np.ctypeslib.as_array(uint8_buffer.get_flipped(), (uint8_buffer.width, uint8_buffer.height, uint8_buffer.num_components)).astype(float)
-
                         #raw_pixels = np.ctypeslib.as_array(float_buffer.get_flipped(), (shape_x, shape_y, active_aovs[aov].num_components))
 
                         #if active_aovs[aov].channel_type == 'RGBA':
