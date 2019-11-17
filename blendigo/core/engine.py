@@ -58,11 +58,27 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
     bl_use_postprocess = True
 
     def export_object(self, obj, matrix = None, name = ""):
+        
+        if obj.section_plane.enabled:
+            point = obj.matrix_world.to_translation()
+            normal = obj.matrix_world.to_quaternion() @ Vector((0.0, 0.0, -1.0))
+            section_plane = SectionPlane(point, normal)
+            section_plane.enabled = obj.section_plane.enabled
+            section_plane.cull_geometry = obj.section_plane.cull_geometry
+
+            self.exported_objects[name] = section_plane
+
+            return True
+
         if obj.type not in {'MESH', 'CURVE', 'SURFACE', 'FONT', 'META'}:
             return False
 
         if name == "":
             name = obj.name
+
+
+
+
 
         if name not in self.exported_objects.keys():
             #print("Exporting object {}...".format(name))
@@ -255,6 +271,9 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
             indigo_render_settings.foreground_alpha = render_settings.foreground_alpha
             indigo_render_settings.splat_filter = render_settings.splat_filter
             indigo_render_settings.downsize_filter = render_settings.downsize_filter
+
+            print(render_settings.splat_filter)
+            print(render_settings.downsize_filter)
 
             #indigo_render_settings.use_subres_rendering = True
 

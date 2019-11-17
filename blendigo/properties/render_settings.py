@@ -185,8 +185,9 @@ class IndigoRendererProperties(bpy.types.PropertyGroup):
     splat_filter: EnumProperty(
         items = [
                 ('box', 'Box', 'Box filter.'),
-                ('fast_box', 'Fast Box', 'Fast Box filter.'),
-                ('radial', 'Radial', 'Radial filter.')
+                ('fastbox', 'Fast Box', 'Fast Box filter.'),
+                ('radial', 'Radial', 'Radial filter.'),
+                ('mn_cubic', 'Cubic', 'Cubic filter.')
             ],
         name="Splat filter",
         description="Splat filter",

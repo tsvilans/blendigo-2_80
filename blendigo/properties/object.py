@@ -26,13 +26,26 @@ class IndigoEmissionScaleProperties(bpy.types.PropertyGroup):
         ('luminous_emittance', 'lux', 'Luminous emittance (lm/m/m)')},
         default='luminous_flux')
 
+class IndigoSectionPlaneProperties(bpy.types.PropertyGroup):
+    enabled: BoolProperty(
+    name="Enabled",
+    description="Enable section plane.",
+    default=False,
+    )
+
+    cull_geometry: BoolProperty(
+    name="Cull Geometry",
+    description="Cull geometry behind section plane.",
+    default=False,
+    )    
 
 class IndigoObjectProperties(bpy.types.PropertyGroup):
-    emission_scale: bpy.props.PointerProperty(type=IndigoEmissionScaleProperties)
+    #emission_scale: bpy.props.PointerProperty(type=IndigoEmissionScaleProperties)
 
+    section_plane: bpy.props.PointerProperty(type=IndigoSectionPlaneProperties)
 
-    bidirectional: BoolProperty(
-        name="Bidirectional",
-        description="Use Bidirectional Path Tracing (Bidir).",
-        default=True,
-        )
+    #bidirectional: BoolProperty(
+    #    name="Bidirectional",
+    #    description="Use Bidirectional Path Tracing (Bidir).",
+    #    default=True,
+    #    )
