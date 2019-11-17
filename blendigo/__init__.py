@@ -50,6 +50,7 @@ classes = [
     IndigoDoubleSidedThinShaderNode,
     IndigoSpecularShaderNode,
     IndigoEmissionShaderNode,
+    IndigoExitPortalShaderNode,
     IndigoParamRGBShaderNode, 
     IndigoParamUniformShaderNode, 
     IndigoParamBlackbodyShaderNode, 

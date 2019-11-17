@@ -407,7 +407,7 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
         interval = 1.0
 
         if render_settings.haltspp < 1:
-            haltspp = 1000
+            haltspp = 10000
         else:
             haltspp = render_settings.haltspp
 

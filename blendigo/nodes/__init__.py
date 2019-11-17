@@ -9,6 +9,7 @@ from .double_sided_thin import IndigoDoubleSidedThinShaderNode
 from .specular import IndigoSpecularShaderNode
 from .texture import IndigoTextureNode
 from .emission import IndigoEmissionShaderNode#, IndigoEmissionScaleProperties
+from .exit_portal import IndigoExitPortalShaderNode
 from .param_rgb import IndigoParamRGBShaderNode
 from .param_uniform import IndigoParamUniformShaderNode
 from .param_blackbody import IndigoParamBlackbodyShaderNode
@@ -34,6 +35,7 @@ node_categories = [
         NodeItem("IndigoDoubleSidedThinShaderNode"),
         NodeItem("IndigoTextureNode"),
         NodeItem("IndigoEmissionShaderNode"),
+        NodeItem("IndigoExitPortalShaderNode"),
         ]),
 
     IndigoNodeCategory("INDIGO_PARAMS", "Indigo Params", items=[
