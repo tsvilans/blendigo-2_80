@@ -65,6 +65,7 @@ class IndigoShaderNode:
     def _create_common_inputs(self):
         self.inputs.new('NodeSocketShader', "Emission")
         self.inputs.new('NodeSocketShader', "Bump")
+        self.inputs.new('NodeSocketShader', "Normal")
         self.inputs.new('NodeSocketShader', "Displacement")
 
     def _convert_common_inputs(self, indigo_material, name, exporter):
@@ -72,6 +73,10 @@ class IndigoShaderNode:
         bump = self._process_input('Bump', WavelengthIndependentParam, WavelengthIndependentParam.Uniform(0.0))
         if bump:
             indigo_material.bump = bump
+
+        normal_map = self._process_input('Normal', WavelengthDependentParam, WavelengthDependentParam.Uniform(0.0))
+        if bump:
+            indigo_material.normal_map = normal_map
 
         displacement = self._process_input('Displacement', WavelengthIndependentParam, WavelengthIndependentParam.Uniform(0.0))
         if displacement:
