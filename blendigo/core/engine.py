@@ -59,12 +59,12 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
 
     def export_object(self, obj, matrix = None, name = ""):
         
-        if obj.section_plane.enabled:
+        if obj.indigo_object.section_plane_enabled:
             point = obj.matrix_world.to_translation()
             normal = obj.matrix_world.to_quaternion() @ Vector((0.0, 0.0, -1.0))
             section_plane = SectionPlane(point, normal)
-            section_plane.enabled = obj.section_plane.enabled
-            section_plane.cull_geometry = obj.section_plane.cull_geometry
+            section_plane.enabled = obj.indigo_object.section_plane_enabled
+            section_plane.cull_geometry = obj.indigo_object.section_plane_cull_geometry
 
             self.exported_objects[name] = section_plane
 
@@ -75,10 +75,6 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
 
         if name == "":
             name = obj.name
-
-
-
-
 
         if name not in self.exported_objects.keys():
             #print("Exporting object {}...".format(name))
@@ -134,6 +130,7 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
             
             indigo_model.SetMaterials(materials)
             indigo_model.SetEmissionScales(emission_scales)
+            indigo_model.VisibleToCamera(obj.indigo_object.visible_to_camera)
 
             self.exported_objects[name] = indigo_model
             #print("Added model %s..." % obj.name)
@@ -217,12 +214,27 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
         self.material_exporter = ShaderNodeExporter()
 
         if self.is_preview:
+
+            preview_names = [
+                "preview_flat",
+                "preview_sphere",
+                "preview_cube", 
+                "preview_hair",
+                "preview_shaderball", 
+                "preview_cloth",
+                "preview_fluid", 
+                ]
+
             logs = False
             material = None
             for instance in depsgraph.object_instances:
-                if instance.object.name == "preview_sphere":
+                #if hasattr(instance.object.data, "materials") and len(instance.object.data.materials) > 0:
+                #    print("{} -> {}".format(instance.object.name, instance.object.data.materials[0]))
+                if instance.object.name in preview_names:
                     material = instance.object.data.materials[0]
                     break
+            if not material:
+                return {'CANCELLED'}
 
             self.material_exporter.export(material)
             
@@ -235,6 +247,7 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
             indigo_render_settings = self.indigo_preview_scene.GetRenderSettings()
             indigo_render_settings.width = self.resolution_x
             indigo_render_settings.height = self.resolution_y
+            indigo_render_settings.halt_samples = min(100, max(1, render_settings.haltspp))
 
             tm = self.indigo_preview_scene.GetTonemapping()
             tm.type = TONEMAPPING_TYPE['Linear']

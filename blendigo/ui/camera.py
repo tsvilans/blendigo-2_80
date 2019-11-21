@@ -46,26 +46,6 @@ class INDIGO_PT_camera(bpy.types.Panel):
         col = layout.column()
         row = col.row()
 
-class INDIGO_PT_section_plane(bpy.types.Panel):
-    bl_label = "Indigo Section Plane"
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context = "object"
-
-    @classmethod
-    def poll(cls, context):
-        return context.scene.render.engine == IndigoRenderEngine.bl_idname
-    
-    def draw(self, context):
-        #if context.object.data.camera is not None:
-        sp = context.object.section_plane
-        layout = self.layout
-        #col = layout.column()
-        
-        row = layout.row()
-        row.prop(sp, "enabled")
-        row.prop(sp, "cull_geometry")
-
 
 class INDIGO_PT_tonemapping(bpy.types.Panel):
     #bl_idname = "view3d.indigo_ui_tonemapping"

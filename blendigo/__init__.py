@@ -28,11 +28,12 @@ from .properties.render_settings import IndigoRendererProperties, IndigoRenderer
 from .properties.camera import IndigoCameraProperties
 from .properties.light import IndigoLightSunProperties, IndigoLightHemiProperties
 from .properties.material import IndigoMaterialProperties, IndigoTextureProperties
-from .properties.object import IndigoObjectProperties, IndigoSectionPlaneProperties
+from .properties.object import IndigoObjectProperties
 
-from .ui.camera import INDIGO_PT_camera, INDIGO_PT_section_plane
+from .ui.camera import INDIGO_PT_camera
 from .ui.render_settings import INDIGO_PT_render_settings
 from .ui.light import INDIGO_PT_lights, INDIGO_PT_light_sun, INDIGO_PT_light_hemi
+from .ui.object import INDIGO_PT_object_settings
 
 
 classes = [
@@ -60,7 +61,6 @@ classes = [
     IndigoLightSunProperties,
     IndigoLightHemiProperties,
 
-    IndigoSectionPlaneProperties,
     IndigoObjectProperties,
 
     INDIGO_PT_camera,
@@ -68,7 +68,7 @@ classes = [
     INDIGO_PT_lights, 
     INDIGO_PT_light_sun, 
     INDIGO_PT_light_hemi,
-    INDIGO_PT_section_plane,
+    INDIGO_PT_object_settings,
 
 
     #IndigoNodeCategory,
@@ -337,8 +337,7 @@ def register():
 
     bpy.types.Material.indigo_material = bpy.props.PointerProperty(name="Indigo Material Properties", type = IndigoMaterialProperties)
     bpy.types.Texture.indigo_texture = bpy.props.PointerProperty(name="Indigo Texture Properties", type = IndigoTextureProperties)
-
-    bpy.types.Object.section_plane = bpy.props.PointerProperty(name="Indigo Section Plane", type = IndigoSectionPlaneProperties)
+    bpy.types.Object.indigo_object = bpy.props.PointerProperty(name="Indigo Object Properties", type = IndigoObjectProperties)
 
 
     nodeitems_utils.register_node_categories(IndigoRenderEngine.bl_idname, node_categories)

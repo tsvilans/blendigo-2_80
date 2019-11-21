@@ -42,8 +42,23 @@ class IndigoSectionPlaneProperties(bpy.types.PropertyGroup):
 class IndigoObjectProperties(bpy.types.PropertyGroup):
     #emission_scale: bpy.props.PointerProperty(type=IndigoEmissionScaleProperties)
 
-    section_plane: bpy.props.PointerProperty(type=IndigoSectionPlaneProperties)
+    section_plane_enabled: BoolProperty(
+    name="Enabled",
+    description="Enable section plane.",
+    default=False,
+    )
 
+    section_plane_cull_geometry: BoolProperty(
+    name="Cull Geometry",
+    description="Cull geometry behind section plane.",
+    default=False,
+    )    
+
+    visible_to_camera: BoolProperty(
+    name="Visible to Camera",
+    description="Make object visible to camera.",
+    default=True,
+    )
     #bidirectional: BoolProperty(
     #    name="Bidirectional",
     #    description="Use Bidirectional Path Tracing (Bidir).",

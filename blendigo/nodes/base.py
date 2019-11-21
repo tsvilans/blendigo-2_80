@@ -74,8 +74,8 @@ class IndigoShaderNode:
         if bump:
             indigo_material.bump = bump
 
-        normal_map = self._process_input('Normal', WavelengthDependentParam, WavelengthDependentParam.Uniform(0.0))
-        if bump:
+        normal_map = self._process_input('Normal', Vec3Param, None)
+        if normal_map:
             indigo_material.normal_map = normal_map
 
         displacement = self._process_input('Displacement', WavelengthIndependentParam, WavelengthIndependentParam.Uniform(0.0))
