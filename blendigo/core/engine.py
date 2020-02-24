@@ -284,6 +284,8 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
             indigo_render_settings.foreground_alpha = render_settings.foreground_alpha
             indigo_render_settings.splat_filter = render_settings.splat_filter
             indigo_render_settings.downsize_filter = render_settings.downsize_filter
+            indigo_render_settings.clamp_contributions = render_settings.clamp_contributions
+            indigo_render_settings.max_contributions = render_settings.max_contributions
 
             print(render_settings.splat_filter)
             print(render_settings.downsize_filter)
@@ -385,7 +387,8 @@ class IndigoRenderEngine(bpy.types.RenderEngine):
                     import subprocess
                     tm.scale = 1.0
 
-                    subprocess.run(["C:\\Program Files\\Indigo Renderer\\indigo.exe", igs_path])
+                    #subprocess.run(["C:\\Program Files\\Indigo Renderer\\indigo.exe", igs_path], stdin=None, stdout=None, stderr=None)
+                    subprocess.Popen(["C:\\Program Files\\Indigo Renderer\\indigo.exe", igs_path], shell=False, stdin=None, stdout=None, stderr=None, close_fds=True)
                     return
 
         '''
